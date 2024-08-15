@@ -12,6 +12,8 @@ export default {
       iconsGray: "#828485",
       inpurBorder: "#26292B",
       inputBg: "#202426",
+      textGray: "#6C6E70",
+      messageGray: "#939697",
     },
   },
   // eslint-disable-next-line no-undef
