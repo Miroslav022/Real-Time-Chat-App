@@ -13,10 +13,10 @@ function Chat() {
   // };
   return (
     <div
-      className="bg-gray-900 border-myGray grid"
+      className="bg-gray-900 border-r-2 border-myGray grid overflow-y-hidden"
       style={{ gridTemplateRows: "5rem auto 5rem" }}
     >
-      <div className="border-b-2 border-myGray">
+      <div className="border-b-2  border-myGray">
         <div className="p-4 flex justify-between">
           <div className="flex gap-5">
             <ProfileImage />
@@ -30,7 +30,7 @@ function Chat() {
           </div>
         </div>
       </div>
-      <div className="bg-myBgDark p-4 flex flex-col gap-4">
+      <div className="bg-myBgDark p-4 flex flex-col gap-4 overflow-y-scroll">
         <div className="max-w-xl w-fit">
           <div className="bg-myGray w-fit max-w-xl p-3 rounded-r-lg rounded-b-lg text-messageGray">
             message
@@ -50,12 +50,46 @@ function Chat() {
             12:00 PM
           </span>
         </div>
-        <div className="max-w-xs w-fit ">
+        <div className="max-w-xs w-fit ml-auto">
           <div className="bg-myLightBlue ml-auto w-fit max-w-xs p-3 rounded-l-lg rounded-b-lg text-black">
             Lorem ipsum dolor sit amet consectetur adipisicing elit. Vitae
             exercitationem sit officiis inventore similique repellat asperiores,
             unde odio, voluptate id facilis, blanditiis necessitatibus dolores.
             Quam fugit quae odio quia nulla.
+          </div>
+          <span className="text-[0.7rem] float-end mt-2 text-textGray">
+            12:00 PM
+          </span>
+        </div>
+        <div className="max-w-xs w-fit ml-auto">
+          <div className="bg-myLightBlue ml-auto w-fit max-w-xs p-3 rounded-l-lg rounded-b-lg text-black">
+            Lorem ipsum dolor
+          </div>
+          <span className="text-[0.7rem] float-end mt-2 text-textGray">
+            12:00 PM
+          </span>
+        </div>
+        <div className="max-w-xs w-fit ml-auto">
+          <div className="bg-myLightBlue ml-auto w-fit max-w-xs p-3 rounded-l-lg rounded-b-lg text-black">
+            Lorem
+          </div>
+          <span className="text-[0.7rem] float-end mt-2 text-textGray">
+            12:00 PM
+          </span>
+        </div>
+        <div className="max-w-xl w-fit">
+          <div className="bg-myGray w-fit max-w-xl p-3 rounded-r-lg rounded-b-lg text-messageGray">
+            message
+          </div>
+          <span className="text-[0.7rem] float-end mt-2 text-textGray">
+            12:00 PM
+          </span>
+        </div>
+        <div className="max-w-xl w-fit">
+          <div className="bg-myGray w-fit max-w-xl p-3 rounded-r-lg rounded-b-lg text-messageGray">
+            Lorem ipsum, dolor sit amet consectetur adipisicing elit. Fugiat
+            optio suscipit, veniam libero magni quo provident tempore deleniti
+            eius aperiam excepturi dicta quia
           </div>
           <span className="text-[0.7rem] float-end mt-2 text-textGray">
             12:00 PM
