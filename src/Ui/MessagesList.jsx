@@ -1,13 +1,24 @@
 import { PiDotsThreeOutlineVertical } from "react-icons/pi";
 import ProfileImage from "./ProfileImage";
+import { useQuery } from "@tanstack/react-query";
+import PropTypes from "prop-types";
 
-function MessagesList() {
+function MessagesList({ setActiveChat }) {
+  const { data } = useQuery({
+    queryKey: ["user"],
+  });
+
+  function SelectChat(userId) {
+    console.log("clicked");
+    setActiveChat(userId);
+  }
+
   return (
     <div className="bg-gray-850 border-r-2 border-myGray flex flex-col h-screen">
       <div className="flex gap-5 p-4 items-center border-b-2 border-myGray">
         <ProfileImage />
         <div>
-          <h2 className="font-medium">Miroslav Jandric</h2>
+          <h2 className="font-medium">{data.unique_name}</h2>
           <span className="text-iconsGray text-sm">My Account</span>
         </div>
         <div className="border-2 border-myGray w-[3rem] h-[3rem] flex items-center justify-center rounded-full ml-auto">
@@ -61,30 +72,35 @@ function MessagesList() {
         </h2>
         <div className="flex flex-col gap-4">
           {/* Messages go here */}
-          {[...Array(10)].map((_, i) => (
-            <div key={i} className="flex gap-3 items-center">
-              <div className="w-[3rem] rounded-full">
-                <img
-                  src="../public/avatar.jpg"
-                  className="w-full h-full rounded-full"
-                  alt="message-avatar"
-                />
-              </div>
-              <div>
-                <span className="block">John Doe</span>
-                <span className="block text-sm text-iconsGray">
-                  Lorem ipsum dolor sit amet
-                </span>
-              </div>
-              <span className="block text-[0.8rem] text-iconsGray ml-auto pr-4">
-                10:10pm
+          <div
+            className="flex gap-3 items-center cursor-pointer"
+            onClick={() => SelectChat(34)}
+          >
+            <div className="w-[3rem] rounded-full">
+              <img
+                src="../public/avatar.jpg"
+                className="w-full h-full rounded-full"
+                alt="message-avatar"
+              />
+            </div>
+            <div>
+              <span className="block">Mile</span>
+              <span className="block text-sm text-iconsGray">
+                Lorem ipsum dolor sit amet
               </span>
             </div>
-          ))}
+            <span className="block text-[0.8rem] text-iconsGray ml-auto pr-4">
+              10:10pm
+            </span>
+          </div>
         </div>
       </div>
     </div>
   );
 }
+
+MessagesList.propTypes = {
+  setActiveChat: PropTypes.func,
+};
 
 export default MessagesList;

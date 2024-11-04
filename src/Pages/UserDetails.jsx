@@ -1,6 +1,6 @@
 import { Controller, useForm } from "react-hook-form";
 import { PhoneInput } from "react-international-phone";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import ValidationError from "../Ui/ValidationError";
 
 function UserDetails() {
@@ -14,7 +14,7 @@ function UserDetails() {
   } = useForm();
 
   async function submitStep2(requestBody) {
-    const data = await fetch("https://localhost:7257/Api/Auth", {
+    const data = await fetch("https://localhost:7257/Api/Auth/registration", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(requestBody),
@@ -23,6 +23,7 @@ function UserDetails() {
     if (response?.isSuccess) {
       navigate("/home");
     } else {
+      console.log(response);
       handleServerErrors(response?.errors);
     }
   }
@@ -132,8 +133,15 @@ function UserDetails() {
         <ValidationError error={errors?.phoneNumber.message} />
       )}
       <button className="btn btn-primary bg-myLightBlue text-xl border-myLightBlue">
-        Next
+        Create an account
       </button>
+      <div className="flex gap-1 justify-center">
+        {" "}
+        <p>Already have an account?</p>
+        <Link to="/auth/login" className="text-myLightBlue">
+          Sign in
+        </Link>
+      </div>
     </form>
   );
 }
