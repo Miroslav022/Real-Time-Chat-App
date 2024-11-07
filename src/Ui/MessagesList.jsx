@@ -5,7 +5,7 @@ import PropTypes from "prop-types";
 
 function MessagesList({ setActiveChat }) {
   const { data } = useQuery({
-    queryKey: ["user"],
+    queryKey: ["currentUser"],
   });
 
   function SelectChat(userId) {
@@ -18,7 +18,7 @@ function MessagesList({ setActiveChat }) {
       <div className="flex gap-5 p-4 items-center border-b-2 border-myGray">
         <ProfileImage />
         <div>
-          <h2 className="font-medium">{data.unique_name}</h2>
+          <h2 className="font-medium">{data.username}</h2>
           <span className="text-iconsGray text-sm">My Account</span>
         </div>
         <div className="border-2 border-myGray w-[3rem] h-[3rem] flex items-center justify-center rounded-full ml-auto">

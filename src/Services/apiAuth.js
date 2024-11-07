@@ -1,4 +1,4 @@
-// import axiosInstance from "../api/axiosInstance";
+import axiosInstance from "../api/axiosInstance";
 
 const BASE_URL = "https://localhost:7257/Api/Auth";
 export async function loginApi({ email, password }) {
@@ -6,6 +6,7 @@ export async function loginApi({ email, password }) {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),
+    credentials: "include",
   });
   return response;
 }
@@ -13,7 +14,7 @@ export async function loginApi({ email, password }) {
 export async function refreshAccessToken() {
   const response = await fetch(`${BASE_URL}/refresh_token`, {
     method: "POST",
-    credentials: "include",
+    credentials: true,
   });
   if (!response.ok) {
     throw new Error("Token refresh failed");
@@ -21,13 +22,7 @@ export async function refreshAccessToken() {
 }
 
 export async function fetchCurrentUser() {
-  // const { data } = await axiosInstance.get("/Auth/current_user");
-  // console.log(data);
-  // return data;
-  const response = await fetch("https://localhost:7257/Api/Auth/current_user", {
-    method: "GET",
-    credentials: "include",
-  });
-  const data = await response.json();
+  const { data } = await axiosInstance.get("/Auth/current_user");
+  console.log(data);
   return data;
 }

@@ -12,7 +12,7 @@ function Chat({ connection, userId }) {
   const [messages, setMessages] = useState([]);
 
   const { data } = useQuery({
-    queryKey: ["user"],
+    queryKey: ["currentUser"],
   });
 
   useEffect(() => {
@@ -36,7 +36,7 @@ function Chat({ connection, userId }) {
 
   async function sendMessage() {
     try {
-      await connection.invoke("SendMessage", data.sub, userId.toString(), text);
+      await connection.invoke("SendMessage", data.id, userId.toString(), text);
       setText("");
     } catch (err) {
       console.log("error while sending the message:" + err);

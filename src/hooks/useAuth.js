@@ -4,7 +4,10 @@ import { fetchCurrentUser } from "../Services/apiAuth";
 export function useAuth() {
   const { data: user, isLoading } = useQuery({
     queryKey: ["currentUser"],
-    queryFn: fetchCurrentUser,
+    queryFn: async () => {
+      const result = await fetchCurrentUser();
+      return result.value;
+    },
   });
   return { user, isLoading };
 }

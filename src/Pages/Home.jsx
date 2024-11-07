@@ -35,7 +35,7 @@ function Home() {
       if (ActiveChatId) {
         await newConnection.invoke(
           "JoinPrivateChat",
-          data.sub,
+          data.id,
           ActiveChatId.toString()
         );
       }
@@ -46,7 +46,7 @@ function Home() {
     } catch (error) {
       console.log(error);
     }
-  }, [ActiveChatId, data.sub]);
+  }, [ActiveChatId, data.id]);
   if (conn == null) return;
 
   return (
