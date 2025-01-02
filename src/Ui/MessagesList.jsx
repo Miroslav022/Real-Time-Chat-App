@@ -2,15 +2,22 @@ import { PiDotsThreeOutlineVertical } from "react-icons/pi";
 import ProfileImage from "./ProfileImage";
 import { useQuery } from "@tanstack/react-query";
 import PropTypes from "prop-types";
+import { IoPersonAddSharp } from "react-icons/io5";
+import { useState } from "react";
+import AddContact from "./AddContact";
+import ChatCard from "./ChatCard";
+import { useFetchConversations } from "../features/useFetchConversations";
+// import { useSelector } from "react-redux";
 
 function MessagesList({ setActiveChat }) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const { data } = useQuery({
     queryKey: ["currentUser"],
   });
-
-  function SelectChat(userId) {
-    console.log("clicked");
-    setActiveChat(userId);
+  const { conversations } = useFetchConversations(data.id);
+  // const conversations = useSelector((state) => state.chat.conversations);
+  function SelectChat(user) {
+    setActiveChat(user);
   }
 
   return (
@@ -63,38 +70,34 @@ function MessagesList({ setActiveChat }) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-5 flex-grow overflow-y-auto pl-4 pr-4 pt-4">
-        <h2 className="font-medium flex items-center gap-2 text-xl">
+      <div className="flex flex-col gap-5 flex-grow overflow-y-auto">
+        <h2 className="font-medium flex items-center gap-2 text-xl pl-4 pr-4 pt-4">
           Messages
           <span className="bg-myLightBlue text-sm rounded-xl w-6 text-center block">
             20
           </span>
         </h2>
-        <div className="flex flex-col gap-4">
-          {/* Messages go here */}
-          <div
-            className="flex gap-3 items-center cursor-pointer"
-            onClick={() => SelectChat(34)}
-          >
-            <div className="w-[3rem] rounded-full">
-              <img
-                src="../public/avatar.jpg"
-                className="w-full h-full rounded-full"
-                alt="message-avatar"
+        <div className="flex flex-col">
+          {conversations?.length > 0 ? (
+            conversations.map((chat) => (
+              <ChatCard
+                SelectChat={SelectChat}
+                key={chat.userId}
+                chatInfo={chat}
               />
-            </div>
-            <div>
-              <span className="block">Mile</span>
-              <span className="block text-sm text-iconsGray">
-                Lorem ipsum dolor sit amet
-              </span>
-            </div>
-            <span className="block text-[0.8rem] text-iconsGray ml-auto pr-4">
-              10:10pm
-            </span>
-          </div>
+            ))
+          ) : (
+            <p className="text-center pt-4">Start a conversation</p>
+          )}
         </div>
       </div>
+      <div
+        className="ml-3 mb-3 bg-myLightBlue w-[3.5rem] h-[3.5rem] rounded-full flex items-center justify-center cursor-pointer"
+        onClick={() => setIsModalOpen(true)}
+      >
+        <IoPersonAddSharp className="text-xl" />
+      </div>
+      <AddContact isOpen={isModalOpen} setIsOpen={setIsModalOpen} />
     </div>
   );
 }
