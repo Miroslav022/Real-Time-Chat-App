@@ -23,6 +23,5 @@ export async function refreshAccessToken() {
 
 export async function fetchCurrentUser() {
   const { data } = await axiosInstance.get("/Auth/current_user");
-  console.log(data);
   return data;
 }

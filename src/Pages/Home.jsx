@@ -5,6 +5,8 @@ import MessagesList from "../Ui/MessagesList";
 import { HubConnectionBuilder } from "@microsoft/signalr";
 import WelcomeToHome from "../Ui/WelcomeToHome";
 import { useQuery } from "@tanstack/react-query";
+import { Provider } from "react-redux";
+import store from "../store.js";
 
 const newConnection = new HubConnectionBuilder()
   .withUrl("https://localhost:7257/chat", {
@@ -14,7 +16,7 @@ const newConnection = new HubConnectionBuilder()
 
 function Home() {
   const [conn, setConnection] = useState(null);
-  const [ActiveChatId, SetActiveChatId] = useState(null);
+  const [ActiveChat, SetActiveChat] = useState(null);
 
   const { data } = useQuery({
     queryKey: ["currentUser"],
@@ -32,11 +34,12 @@ function Home() {
         console.log(roomId);
       });
 
-      if (ActiveChatId) {
+      if (ActiveChat) {
+        console.log(ActiveChat);
         await newConnection.invoke(
           "JoinPrivateChat",
           data.id,
-          ActiveChatId.toString()
+          ActiveChat.userId
         );
       }
       setConnection(newConnection);
@@ -46,23 +49,25 @@ function Home() {
     } catch (error) {
       console.log(error);
     }
-  }, [ActiveChatId, data.id]);
+  }, [ActiveChat, data.id]);
   if (conn == null) return;
 
   return (
-    <div
-      className="h-screen grid gap-0 bg-gray-900 text-white"
-      style={{ gridTemplateColumns: "6rem 22rem 5fr auto" }}
-    >
-      <LeftSideBar />
-      <MessagesList setActiveChat={SetActiveChatId} />
-      {ActiveChatId ? (
-        <Chat connection={conn} userId={ActiveChatId} />
-      ) : (
-        <WelcomeToHome />
-      )}
-      <div className="bg-gray-850 p-4 sm:hidden"></div>
-    </div>
+    <Provider store={store}>
+      <div
+        className="h-screen grid gap-0 bg-gray-900 text-white"
+        style={{ gridTemplateColumns: "6rem 22rem 5fr auto" }}
+      >
+        <LeftSideBar />
+        <MessagesList setActiveChat={SetActiveChat} />
+        {ActiveChat ? (
+          <Chat connection={conn} user={ActiveChat} />
+        ) : (
+          <WelcomeToHome />
+        )}
+        <div className="bg-gray-850 p-4 sm:hidden"></div>
+      </div>
+    </Provider>
   );
 }
 

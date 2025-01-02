@@ -5,11 +5,15 @@ import { useEffect, useState } from "react";
 import { RiAttachment2 } from "react-icons/ri";
 import PropTypes from "prop-types";
 import Message from "./Message";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMessages } from "../features/chat/useMessages";
 
-function Chat({ connection, userId }) {
+function Chat({ connection, user }) {
+  const { messages: storedMessages } = useMessages(user.id);
+  const queryClient = useQueryClient();
+  // console.log(storedMessages);
   const [text, setText] = useState("");
-  const [messages, setMessages] = useState([]);
+  // const [messages, setMessages] = useState([]);
 
   const { data } = useQuery({
     queryKey: ["currentUser"],
@@ -17,12 +21,13 @@ function Chat({ connection, userId }) {
 
   useEffect(() => {
     if (connection) {
-      connection.on("ReceivePrivateMessage", (sender, message, time) => {
+      connection.on("ReceivePrivateMessage", (sender, message) => {
         console.log({ sender, message });
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          { sender, message, time },
-        ]);
+        queryClient.invalidateQueries({ queryKey: ["messages"] });
+        // setMessages((prevMessages) => [
+        //   ...prevMessages,
+        //   { sender, message, time },
+        // ]);
       });
       // await connection.invoke("JoinPrivateChat", user1Id, user2Id);
     }
@@ -32,11 +37,17 @@ function Chat({ connection, userId }) {
         connection.off("ReceivePrivateMessage");
       }
     };
-  }, [connection, messages]);
-
+  }, [connection, queryClient]);
   async function sendMessage() {
     try {
-      await connection.invoke("SendMessage", data.id, userId.toString(), text);
+      const message = {
+        conversationId: user.id,
+        senderId: data.id,
+        receiverId: user.userId,
+        message: text,
+        messageTypeId: 1,
+      };
+      await connection.invoke("SendMessage", message);
       setText("");
     } catch (err) {
       console.log("error while sending the message:" + err);
@@ -52,7 +63,7 @@ function Chat({ connection, userId }) {
           <div className="flex gap-5">
             <ProfileImage />
             <div>
-              <span className="block font-medium">Mile</span>
+              <span className="block font-medium">{user.username}</span>
               <span className="block text-sm text-myLightBlue">Typing...</span>
             </div>
           </div>
@@ -62,14 +73,14 @@ function Chat({ connection, userId }) {
         </div>
       </div>
       <div className="bg-myBgDark p-4 flex flex-col gap-4 overflow-y-scroll">
-        {messages.length === 0 && (
+        {storedMessages?.length === 0 && (
           <span className="text-center p-3 text-messageGray">
             No messages, start covnersation.
           </span>
         )}
 
-        {messages.map((message, key) => (
-          <Message message={message} currentUser={data.unique_name} key={key} />
+        {storedMessages?.map((message, key) => (
+          <Message message={message} currentUser={data.username} key={key} />
         ))}
       </div>
       <div className="flex gap-2 items-center p-4">
@@ -100,7 +111,7 @@ function Chat({ connection, userId }) {
 
 Chat.propTypes = {
   connection: PropTypes.object,
-  userId: PropTypes.number,
+  user: PropTypes.object,
 };
 
 export default Chat;

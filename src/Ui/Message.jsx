@@ -9,28 +9,29 @@ const messageStyle = {
 };
 
 function Message({ message, currentUser }) {
-  return (
-    <div
-      className={
-        currentUser === message.sender
-          ? messageStyle.sentBox
-          : messageStyle.receivedBox
-      }
-    >
+  if (message)
+    return (
       <div
         className={
-          currentUser === message.sender
-            ? messageStyle.sent
-            : messageStyle.received
+          currentUser === message.senderUserName
+            ? messageStyle.sentBox
+            : messageStyle.receivedBox
         }
       >
-        {message.message}
+        <div
+          className={
+            currentUser === message.senderUserName
+              ? messageStyle.sent
+              : messageStyle.received
+          }
+        >
+          {message.messageContent}
+        </div>
+        <span className="text-[0.7rem] float-end mt-2 text-textGray">
+          {message.time}
+        </span>
       </div>
-      <span className="text-[0.7rem] float-end mt-2 text-textGray">
-        {message.time}
-      </span>
-    </div>
-  );
+    );
 }
 
 Message.propTypes = {
