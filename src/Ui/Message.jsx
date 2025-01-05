@@ -9,29 +9,31 @@ const messageStyle = {
 };
 
 function Message({ message, currentUser }) {
-  if (message)
-    return (
+  const date = new Date(message.createdAt);
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getUTCMinutes()).padStart(2, "0");
+  return (
+    <div
+      className={
+        currentUser === message.senderUserName
+          ? messageStyle.sentBox
+          : messageStyle.receivedBox
+      }
+    >
       <div
         className={
           currentUser === message.senderUserName
-            ? messageStyle.sentBox
-            : messageStyle.receivedBox
+            ? messageStyle.sent
+            : messageStyle.received
         }
       >
-        <div
-          className={
-            currentUser === message.senderUserName
-              ? messageStyle.sent
-              : messageStyle.received
-          }
-        >
-          {message.messageContent}
-        </div>
-        <span className="text-[0.7rem] float-end mt-2 text-textGray">
-          {message.time}
-        </span>
+        {message.messageContent}
       </div>
-    );
+      <span className="text-[0.7rem] float-end mt-2 text-textGray">
+        {`${hours}:${minutes}`}
+      </span>
+    </div>
+  );
 }
 
 Message.propTypes = {

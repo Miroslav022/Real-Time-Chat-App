@@ -24,12 +24,8 @@ function Chat({ connection, user }) {
       connection.on("ReceivePrivateMessage", (sender, message) => {
         console.log({ sender, message });
         queryClient.invalidateQueries({ queryKey: ["messages"] });
-        // setMessages((prevMessages) => [
-        //   ...prevMessages,
-        //   { sender, message, time },
-        // ]);
+        queryClient.invalidateQueries({ queryKey: ["Conversations"] });
       });
-      // await connection.invoke("JoinPrivateChat", user1Id, user2Id);
     }
 
     return () => {
@@ -40,6 +36,7 @@ function Chat({ connection, user }) {
   }, [connection, queryClient]);
   async function sendMessage() {
     try {
+      if (!text) return;
       const message = {
         conversationId: user.id,
         senderId: data.id,
