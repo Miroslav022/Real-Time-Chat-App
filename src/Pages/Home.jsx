@@ -5,8 +5,6 @@ import MessagesList from "../Ui/MessagesList";
 import { HubConnectionBuilder } from "@microsoft/signalr";
 import WelcomeToHome from "../Ui/WelcomeToHome";
 import { useQuery } from "@tanstack/react-query";
-import { Provider } from "react-redux";
-import store from "../store.js";
 
 const newConnection = new HubConnectionBuilder()
   .withUrl("https://localhost:7257/chat", {
@@ -17,6 +15,7 @@ const newConnection = new HubConnectionBuilder()
 function Home() {
   const [conn, setConnection] = useState(null);
   const [ActiveChat, SetActiveChat] = useState(null);
+  const [roomId, setRoomId] = useState(null);
 
   const { data } = useQuery({
     queryKey: ["currentUser"],
@@ -32,6 +31,7 @@ function Home() {
       });
       newConnection.on("JoinedRoom", (roomId) => {
         console.log(roomId);
+        setRoomId(roomId);
       });
 
       if (ActiveChat) {
@@ -53,21 +53,19 @@ function Home() {
   if (conn == null) return;
 
   return (
-    <Provider store={store}>
-      <div
-        className="h-screen grid gap-0 bg-gray-900 text-white"
-        style={{ gridTemplateColumns: "6rem 22rem 5fr auto" }}
-      >
-        <LeftSideBar />
-        <MessagesList setActiveChat={SetActiveChat} />
-        {ActiveChat ? (
-          <Chat connection={conn} user={ActiveChat} />
-        ) : (
-          <WelcomeToHome />
-        )}
-        <div className="bg-gray-850 p-4 sm:hidden"></div>
-      </div>
-    </Provider>
+    <div
+      className="h-screen grid gap-0 bg-gray-900 text-white"
+      style={{ gridTemplateColumns: "6rem 22rem 5fr auto" }}
+    >
+      <LeftSideBar />
+      <MessagesList setActiveChat={SetActiveChat} />
+      {ActiveChat ? (
+        <Chat connection={conn} user={ActiveChat} roomId={roomId} />
+      ) : (
+        <WelcomeToHome />
+      )}
+      <div className="bg-gray-850 p-4 sm:hidden"></div>
+    </div>
   );
 }
 

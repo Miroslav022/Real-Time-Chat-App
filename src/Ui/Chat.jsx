@@ -8,12 +8,12 @@ import Message from "./Message";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMessages } from "../features/chat/useMessages";
 
-function Chat({ connection, user }) {
+function Chat({ connection, user, roomId }) {
   const { messages: storedMessages } = useMessages(user.id);
   const queryClient = useQueryClient();
-  // console.log(storedMessages);
   const [text, setText] = useState("");
-  // const [messages, setMessages] = useState([]);
+  const [isTyping, setIsTyping] = useState(false);
+  const [typingUser, setTypingUser] = useState();
 
   const { data } = useQuery({
     queryKey: ["currentUser"],
@@ -26,6 +26,11 @@ function Chat({ connection, user }) {
         queryClient.invalidateQueries({ queryKey: ["messages"] });
         queryClient.invalidateQueries({ queryKey: ["Conversations"] });
       });
+
+      connection.on("ReceiveTypingNotification", (userName) => {
+        console.log("TYPYNG...", userName);
+        setTypingUser(userName);
+      });
     }
 
     return () => {
@@ -34,6 +39,17 @@ function Chat({ connection, user }) {
       }
     };
   }, [connection, queryClient]);
+  function handleTyping(e) {
+    if (!isTyping) {
+      setIsTyping(true);
+      setText(e);
+      connection
+        .invoke("TypingNotification", roomId, data.username)
+        .catch((error) =>
+          console.error("Error sending typing notification: ", error)
+        );
+    }
+  }
   async function sendMessage() {
     try {
       if (!text) return;
@@ -61,7 +77,9 @@ function Chat({ connection, user }) {
             <ProfileImage />
             <div>
               <span className="block font-medium">{user.username}</span>
-              <span className="block text-sm text-myLightBlue">Typing...</span>
+              <span className="block text-sm text-myLightBlue">
+                Typing... {typingUser}
+              </span>
             </div>
           </div>
           <div className="border-2 border-myGray w-[3rem] h-[3rem] flex items-center justify-center rounded-full ml-auto">
@@ -89,7 +107,7 @@ function Chat({ connection, user }) {
             borderColor="#26292B"
             borderRadius="0.75rem"
             value={text}
-            onChange={setText}
+            onChange={handleTyping}
             onEnter={sendMessage}
             placeholder="Type a message"
           />
@@ -109,6 +127,7 @@ function Chat({ connection, user }) {
 Chat.propTypes = {
   connection: PropTypes.object,
   user: PropTypes.object,
+  roomId: PropTypes.string,
 };
 
 export default Chat;
