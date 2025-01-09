@@ -28,8 +28,8 @@ function Chat({ connection, user, roomId }) {
       });
 
       connection.on("ReceiveTypingNotification", (userName) => {
-        console.log("TYPYNG...", userName);
         setTypingUser(userName);
+        setTimeout(() => setTypingUser(""), 3000);
       });
     }
 
@@ -40,7 +40,7 @@ function Chat({ connection, user, roomId }) {
     };
   }, [connection, queryClient]);
   function handleTyping(e) {
-    if (!isTyping) {
+    if (!isTyping && roomId) {
       setIsTyping(true);
       setText(e);
       connection
@@ -48,6 +48,7 @@ function Chat({ connection, user, roomId }) {
         .catch((error) =>
           console.error("Error sending typing notification: ", error)
         );
+      setTimeout(() => setIsTyping(false), 3000);
     }
   }
   async function sendMessage() {
@@ -78,7 +79,7 @@ function Chat({ connection, user, roomId }) {
             <div>
               <span className="block font-medium">{user.username}</span>
               <span className="block text-sm text-myLightBlue">
-                Typing... {typingUser}
+                {typingUser && typingUser + "is Typing..."}
               </span>
             </div>
           </div>
@@ -87,7 +88,7 @@ function Chat({ connection, user, roomId }) {
           </div>
         </div>
       </div>
-      <div className="bg-myBgDark p-4 flex flex-col gap-4 overflow-y-scroll">
+      <div className="bg-myBgDark p-4 flex flex-col gap-4 overflow-y-auto">
         {storedMessages?.length === 0 && (
           <span className="text-center p-3 text-messageGray">
             No messages, start covnersation.

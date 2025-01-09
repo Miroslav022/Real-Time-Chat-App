@@ -5,7 +5,7 @@ import { MdOutlineGroup } from "react-icons/md";
 function LeftSideBar() {
   return (
     <div className="bg-gray-800 p-4 flex flex-col items-center justify-center gap-10 border-r-2 border-myGray">
-      <div className="icon-style">
+      <div className="icon-style active">
         <IoMdChatbubbles size={35} />
       </div>
       <div className="icon-style">

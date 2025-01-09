@@ -59,7 +59,7 @@ function Home() {
     >
       <LeftSideBar />
       <MessagesList setActiveChat={SetActiveChat} />
-      {ActiveChat ? (
+      {ActiveChat && roomId ? (
         <Chat connection={conn} user={ActiveChat} roomId={roomId} />
       ) : (
         <WelcomeToHome />
