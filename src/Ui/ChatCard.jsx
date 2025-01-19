@@ -4,6 +4,7 @@ function ChatCard({ SelectChat, chatInfo }) {
   const date = new Date(chatInfo.lastMessageAt);
   const hours = String(date.getHours()).padStart(2, "0");
   const minutes = String(date.getUTCMinutes()).padStart(2, "0");
+
   return (
     <div
       className="flex gap-3 items-center cursor-pointer p-4 hover:bg-inpurBorder"

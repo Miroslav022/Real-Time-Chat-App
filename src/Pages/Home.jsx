@@ -16,6 +16,7 @@ function Home() {
   const [conn, setConnection] = useState(null);
   const [ActiveChat, SetActiveChat] = useState(null);
   const [roomId, setRoomId] = useState(null);
+  const [onlineUsers, setOnlineUsers] = useState([]);
 
   const { data } = useQuery({
     queryKey: ["currentUser"],
@@ -26,9 +27,15 @@ function Home() {
       if (newConnection.state === "Disconnected") {
         await newConnection.start();
       }
+
       newConnection.on("ReceiveMessage", (message) => {
         console.log(message);
       });
+
+      newConnection.on("UserStatusChanged", (online_users) => {
+        setOnlineUsers(online_users);
+      });
+
       newConnection.on("JoinedRoom", (roomId) => {
         console.log(roomId);
         setRoomId(roomId);
@@ -58,9 +65,16 @@ function Home() {
       style={{ gridTemplateColumns: "6rem 22rem 5fr auto" }}
     >
       <LeftSideBar />
-      <MessagesList setActiveChat={SetActiveChat} />
+      <MessagesList setActiveChat={SetActiveChat} onlineUsers={onlineUsers} />
       {ActiveChat && roomId ? (
-        <Chat connection={conn} user={ActiveChat} roomId={roomId} />
+        <Chat
+          connection={conn}
+          user={ActiveChat}
+          roomId={roomId}
+          isOnline={onlineUsers.some(
+            (user) => user.userId === ActiveChat.userId
+          )}
+        />
       ) : (
         <WelcomeToHome />
       )}

@@ -8,7 +8,7 @@ import Message from "./Message";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMessages } from "../features/chat/useMessages";
 
-function Chat({ connection, user, roomId }) {
+function Chat({ connection, user, roomId, isOnline }) {
   const { messages: storedMessages } = useMessages(user.id);
   const queryClient = useQueryClient();
   const [text, setText] = useState("");
@@ -78,6 +78,9 @@ function Chat({ connection, user, roomId }) {
             <ProfileImage />
             <div>
               <span className="block font-medium">{user.username}</span>
+              <p className="block font-normall text-myLightBlue">
+                {isOnline ? "Online" : "Offline"}
+              </p>
               <span className="block text-sm text-myLightBlue">
                 {typingUser && typingUser + "is Typing..."}
               </span>
@@ -129,6 +132,7 @@ Chat.propTypes = {
   connection: PropTypes.object,
   user: PropTypes.object,
   roomId: PropTypes.string,
+  isOnline: PropTypes.bool,
 };
 
 export default Chat;

@@ -9,7 +9,7 @@ import ChatCard from "./ChatCard";
 import { useFetchConversations } from "../features/useFetchConversations";
 // import { useSelector } from "react-redux";
 
-function MessagesList({ setActiveChat }) {
+function MessagesList({ setActiveChat, onlineUsers }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { data } = useQuery({
     queryKey: ["currentUser"],
@@ -58,12 +58,15 @@ function MessagesList({ setActiveChat }) {
       <div className="pl-4 pr-4 pt-4">
         <h2 className="font-medium text-xl">Online now</h2>
         <div className="flex gap-5 overflow-x-scroll pt-4">
-          {/* Online contacts go here */}
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="text-center">
+          {onlineUsers.map((user) => (
+            <div
+              key={user.userId}
+              className="text-center cursor-pointer"
+              onClick={() => SelectChat(user)}
+            >
               <ProfileImage />
               <span className="block mt-3 text-iconsGray font-medium text-[0.9rem]">
-                John
+                {user.username}
               </span>
             </div>
           ))}
@@ -104,6 +107,7 @@ function MessagesList({ setActiveChat }) {
 
 MessagesList.propTypes = {
   setActiveChat: PropTypes.func,
+  onlineUsers: PropTypes.array,
 };
 
 export default MessagesList;
