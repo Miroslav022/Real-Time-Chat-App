@@ -7,15 +7,16 @@ import { useState } from "react";
 import AddContact from "./AddContact";
 import ChatCard from "./ChatCard";
 import { useFetchConversations } from "../features/useFetchConversations";
-// import { useSelector } from "react-redux";
+import DropDownSettings from "./DropDownSettings";
 
 function MessagesList({ setActiveChat, onlineUsers }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSettingDropDownOpen, setIsSettingsDropDownOpen] = useState(false);
   const { data } = useQuery({
     queryKey: ["currentUser"],
   });
   const { conversations } = useFetchConversations(data.id);
-  // const conversations = useSelector((state) => state.chat.conversations);
+
   function SelectChat(user) {
     setActiveChat(user);
   }
@@ -28,8 +29,14 @@ function MessagesList({ setActiveChat, onlineUsers }) {
           <h2 className="font-medium">{data.username}</h2>
           <span className="text-iconsGray text-sm">My Account</span>
         </div>
-        <div className="border-2 border-myGray w-[3rem] h-[3rem] flex items-center justify-center rounded-full ml-auto">
-          <PiDotsThreeOutlineVertical size={20} />
+        <div className="relative ml-auto cursor-pointer">
+          <div
+            className="border-2 border-myGray w-[3rem] h-[3rem] flex items-center justify-center rounded-full"
+            onClick={() => setIsSettingsDropDownOpen(!isSettingDropDownOpen)}
+          >
+            <PiDotsThreeOutlineVertical size={20} />
+          </div>
+          {isSettingDropDownOpen && <DropDownSettings />}
         </div>
       </div>
 

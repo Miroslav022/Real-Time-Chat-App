@@ -25,3 +25,8 @@ export async function fetchCurrentUser() {
   const { data } = await axiosInstance.get("/Auth/current_user");
   return data;
 }
+
+export async function logout() {
+  const { data } = await axiosInstance.post("/Auth/logout");
+  return data;
+}

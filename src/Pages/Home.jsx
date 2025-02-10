@@ -34,6 +34,14 @@ function Home() {
 
       newConnection.on("UserStatusChanged", (online_users) => {
         setOnlineUsers(online_users);
+        console.log(online_users);
+      });
+
+      newConnection.on("test", (newOnlineUser) => {
+        console.log("USAU U TEST");
+        const data = new Set([...onlineUsers, newOnlineUser]);
+        console.log(Array.from(data));
+        setOnlineUsers(Array.from(data));
       });
 
       newConnection.on("JoinedRoom", (roomId) => {
@@ -56,7 +64,7 @@ function Home() {
     } catch (error) {
       console.log(error);
     }
-  }, [ActiveChat, data.id]);
+  }, [ActiveChat, data.id, onlineUsers]);
   if (conn == null) return;
 
   return (

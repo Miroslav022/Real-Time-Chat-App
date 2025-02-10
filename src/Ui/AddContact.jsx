@@ -3,8 +3,6 @@ import { useState } from "react";
 import axiosInstance from "../api/axiosInstance";
 import UserSearchCard from "./UserSearchCard";
 import { useConversation } from "../features/useConversation";
-import { useDispatch } from "react-redux";
-import { addNewConversation } from "../features/chat/ChatSlice";
 import { useQuery } from "@tanstack/react-query";
 
 function AddContact({ isOpen, setIsOpen }) {
@@ -14,22 +12,9 @@ function AddContact({ isOpen, setIsOpen }) {
   const { data } = useQuery({
     queryKey: ["currentUser"],
   });
-  const dispatch = useDispatch();
 
   function onCreateConversation(user) {
-    const conversationData = {
-      groupName: null,
-      isGroup: false,
-      lastMessageAt: null,
-      userId: user.id,
-      isAdmin: true,
-      senderId: 0,
-      isRead: false,
-      lastMessage: "",
-      username: user.userName,
-    };
     createConversation({ createdBy: data.id, userId: user.id });
-    dispatch(addNewConversation(conversationData));
     setIsOpen(false);
     setUsers([]);
   }

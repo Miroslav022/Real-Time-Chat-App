@@ -82,7 +82,7 @@ function Chat({ connection, user, roomId, isOnline }) {
                 {isOnline ? "Online" : "Offline"}
               </p>
               <span className="block text-sm text-myLightBlue">
-                {typingUser && typingUser + "is Typing..."}
+                {typingUser && typingUser + " is Typing..."}
               </span>
             </div>
           </div>
