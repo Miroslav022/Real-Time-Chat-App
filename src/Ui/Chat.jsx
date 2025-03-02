@@ -7,20 +7,23 @@ import PropTypes from "prop-types";
 import Message from "./Message";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMessages } from "../features/chat/useMessages";
+import { useSignalRContext } from "../context/SignalRContext";
+import { AlwaysScrollToBottom } from "./AlwaysScrollToBottom";
 
-function Chat({ connection, user, roomId, isOnline }) {
+function Chat({ user, roomId, isOnline }) {
   const { messages: storedMessages } = useMessages(user.id);
   const queryClient = useQueryClient();
   const [text, setText] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [typingUser, setTypingUser] = useState();
+  const connection = useSignalRContext();
 
   const { data } = useQuery({
     queryKey: ["currentUser"],
   });
 
   useEffect(() => {
-    if (connection) {
+    if (connection && connection.state === "Connected") {
       connection.on("ReceivePrivateMessage", (sender, message) => {
         console.log({ sender, message });
         queryClient.invalidateQueries({ queryKey: ["messages"] });
@@ -39,6 +42,7 @@ function Chat({ connection, user, roomId, isOnline }) {
       }
     };
   }, [connection, queryClient]);
+
   function handleTyping(e) {
     if (!isTyping && roomId) {
       setIsTyping(true);
@@ -67,6 +71,7 @@ function Chat({ connection, user, roomId, isOnline }) {
       console.log("error while sending the message:" + err);
     }
   }
+
   return (
     <div
       className="bg-gray-900 border-r-2 border-myGray grid overflow-y-hidden"
@@ -77,13 +82,16 @@ function Chat({ connection, user, roomId, isOnline }) {
           <div className="flex gap-5">
             <ProfileImage />
             <div>
-              <span className="block font-medium">{user.username}</span>
-              <p className="block font-normall text-myLightBlue">
-                {isOnline ? "Online" : "Offline"}
-              </p>
-              <span className="block text-sm text-myLightBlue">
-                {typingUser && typingUser + " is Typing..."}
+              <span className="block font-medium">
+                {user.username || user.userName}
               </span>
+              <p className="block font-normall text-myLightBlue">
+                {typingUser
+                  ? typingUser + " is Typing..."
+                  : isOnline
+                  ? "Online"
+                  : "Offline"}
+              </p>
             </div>
           </div>
           <div className="border-2 border-myGray w-[3rem] h-[3rem] flex items-center justify-center rounded-full ml-auto">
@@ -91,7 +99,7 @@ function Chat({ connection, user, roomId, isOnline }) {
           </div>
         </div>
       </div>
-      <div className="bg-myBgDark p-4 flex flex-col gap-4 overflow-y-auto">
+      <div className="bg-myBgDark p-4 flex flex-col gap-4 overflow-y-auto scrollToBottom">
         {storedMessages?.length === 0 && (
           <span className="text-center p-3 text-messageGray">
             No messages, start covnersation.
@@ -101,6 +109,7 @@ function Chat({ connection, user, roomId, isOnline }) {
         {storedMessages?.map((message, key) => (
           <Message message={message} currentUser={data.username} key={key} />
         ))}
+        <AlwaysScrollToBottom />
       </div>
       <div className="flex gap-2 items-center p-4">
         <RiAttachment2 size={30} />
@@ -129,7 +138,6 @@ function Chat({ connection, user, roomId, isOnline }) {
 }
 
 Chat.propTypes = {
-  connection: PropTypes.object,
   user: PropTypes.object,
   roomId: PropTypes.string,
   isOnline: PropTypes.bool,

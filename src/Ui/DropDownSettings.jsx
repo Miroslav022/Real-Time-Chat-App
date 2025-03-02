@@ -1,11 +1,19 @@
 import { CiLogout } from "react-icons/ci";
 import { FaUserEdit } from "react-icons/fa";
 import { useLogout } from "../features/Auth/useLogout";
+import { useSignalRContext } from "../context/SignalRContext";
 
 function DropDownSettings() {
   const { logout, isLoading } = useLogout();
+  const connection = useSignalRContext();
+
   function onClickLogout() {
-    logout();
+    try {
+      logout();
+      connection.stop();
+    } catch (error) {
+      console.error(error);
+    }
   }
   return (
     <div className="absolute bg-myGray p-3 top-[110%] rounded-[1rem] w-[10rem] text-md z-[9999]">

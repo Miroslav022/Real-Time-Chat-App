@@ -1,6 +1,6 @@
 import PropTypes from "prop-types";
 
-function ChatCard({ SelectChat, chatInfo }) {
+function ChatCard({ SelectChat, chatInfo, isOnline }) {
   const date = new Date(chatInfo.lastMessageAt);
   const hours = String(date.getHours()).padStart(2, "0");
   const minutes = String(date.getUTCMinutes()).padStart(2, "0");
@@ -10,12 +10,16 @@ function ChatCard({ SelectChat, chatInfo }) {
       className="flex gap-3 items-center cursor-pointer p-4 hover:bg-inpurBorder"
       onClick={() => SelectChat(chatInfo)}
     >
-      <div className="w-[3rem] rounded-full">
+      <div className="w-[3rem] rounded-full relative">
         <img
           src="../public/avatar.jpg"
           className="w-full h-full rounded-full"
           alt="message-avatar"
         />
+
+        {isOnline && (
+          <div className="w-3 h-3 bg-myLightBlue rounded-full absolute right-0 bottom-[0.1rem]"></div>
+        )}
       </div>
       <div>
         <span className="block">{chatInfo.username}</span>
@@ -33,6 +37,7 @@ function ChatCard({ SelectChat, chatInfo }) {
 ChatCard.propTypes = {
   SelectChat: PropTypes.func,
   chatInfo: PropTypes.object,
+  isOnline: PropTypes.bool,
 };
 
 export default ChatCard;

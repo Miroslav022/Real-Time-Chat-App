@@ -2,21 +2,15 @@ import { useEffect, useState } from "react";
 import Chat from "../Ui/Chat";
 import LeftSideBar from "../Ui/LeftSideBar";
 import MessagesList from "../Ui/MessagesList";
-import { HubConnectionBuilder } from "@microsoft/signalr";
 import WelcomeToHome from "../Ui/WelcomeToHome";
 import { useQuery } from "@tanstack/react-query";
-
-const newConnection = new HubConnectionBuilder()
-  .withUrl("https://localhost:7257/chat", {
-    withCredentials: true,
-  })
-  .build();
+import { useSignalRContext } from "../context/SignalRContext";
 
 function Home() {
-  const [conn, setConnection] = useState(null);
   const [ActiveChat, SetActiveChat] = useState(null);
   const [roomId, setRoomId] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState([]);
+  const newConnection = useSignalRContext();
 
   const { data } = useQuery({
     queryKey: ["currentUser"],
@@ -24,9 +18,7 @@ function Home() {
 
   useEffect(() => {
     async function connection() {
-      if (newConnection.state === "Disconnected") {
-        await newConnection.start();
-      }
+      if (newConnection.state === "Disconnected") return;
 
       newConnection.on("ReceiveMessage", (message) => {
         console.log(message);
@@ -34,38 +26,57 @@ function Home() {
 
       newConnection.on("UserStatusChanged", (online_users) => {
         setOnlineUsers(online_users);
-        console.log(online_users);
       });
 
-      newConnection.on("test", (newOnlineUser) => {
-        console.log("USAU U TEST");
+      newConnection.on("newOnlineUser", (newOnlineUser) => {
+        let alreadyExist = onlineUsers.some(
+          (x) => x.userId === newOnlineUser.userId
+        );
+        if (alreadyExist) return;
+
         const data = new Set([...onlineUsers, newOnlineUser]);
         console.log(Array.from(data));
         setOnlineUsers(Array.from(data));
       });
 
       newConnection.on("JoinedRoom", (roomId) => {
-        console.log(roomId);
         setRoomId(roomId);
       });
 
+      newConnection.on("UserWentOffline", (offlineUser) => {
+        console.log(offlineUser);
+        let filteredOnlineUsers = onlineUsers.filter((x) => {
+          console.log(x.userId, offlineUser);
+          return x.userId !== Number(offlineUser);
+        });
+        console.log(onlineUsers);
+        console.log(filteredOnlineUsers);
+        setOnlineUsers(filteredOnlineUsers);
+      });
+
       if (ActiveChat) {
-        console.log(ActiveChat);
         await newConnection.invoke(
           "JoinPrivateChat",
           data.id,
           ActiveChat.userId
         );
       }
-      setConnection(newConnection);
     }
     try {
       connection();
     } catch (error) {
       console.log(error);
     }
-  }, [ActiveChat, data.id, onlineUsers]);
-  if (conn == null) return;
+    return () => {
+      if (newConnection) {
+        newConnection.off("ReceiveMessage");
+        newConnection.off("JoinedRoom");
+        newConnection.off("UserStatusChanged");
+        newConnection.off("newOnlineUser");
+      }
+    };
+  }, [ActiveChat, data.id, onlineUsers, newConnection]);
+  if (newConnection == null) return;
 
   return (
     <div
@@ -76,7 +87,6 @@ function Home() {
       <MessagesList setActiveChat={SetActiveChat} onlineUsers={onlineUsers} />
       {ActiveChat && roomId ? (
         <Chat
-          connection={conn}
           user={ActiveChat}
           roomId={roomId}
           isOnline={onlineUsers.some(

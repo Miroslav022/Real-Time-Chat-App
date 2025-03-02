@@ -3,7 +3,7 @@ import { getMessages } from "../../Services/apiConversation";
 
 export function useMessages(conversationId) {
   const { data: messages, isLoading } = useQuery({
-    queryKey: ["messages"],
+    queryKey: ["messages", conversationId],
     queryFn: () => getMessages(conversationId),
   });
 

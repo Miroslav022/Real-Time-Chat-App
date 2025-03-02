@@ -2,6 +2,7 @@ import { Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { useEffect } from "react";
 import Spinner from "./Spinner";
+import { SignalRProvider } from "../context/SignalRContext";
 
 function ProtectedRoute() {
   const { user, isLoading } = useAuth();
@@ -19,7 +20,11 @@ function ProtectedRoute() {
     );
   }
 
-  return <Outlet />;
+  return (
+    <SignalRProvider>
+      <Outlet />
+    </SignalRProvider>
+  );
 }
 
 export default ProtectedRoute;

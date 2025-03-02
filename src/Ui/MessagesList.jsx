@@ -73,7 +73,7 @@ function MessagesList({ setActiveChat, onlineUsers }) {
             >
               <ProfileImage />
               <span className="block mt-3 text-iconsGray font-medium text-[0.9rem]">
-                {user.username}
+                {user.userName}
               </span>
             </div>
           ))}
@@ -94,6 +94,7 @@ function MessagesList({ setActiveChat, onlineUsers }) {
                 SelectChat={SelectChat}
                 key={chat.userId}
                 chatInfo={chat}
+                isOnline={onlineUsers.some((x) => x.userId === chat.userId)}
               />
             ))
           ) : (
