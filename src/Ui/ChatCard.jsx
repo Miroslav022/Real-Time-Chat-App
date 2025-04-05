@@ -7,13 +7,15 @@ function ChatCard({ SelectChat, chatInfo, isOnline }) {
 
   return (
     <div
-      className="flex gap-3 items-center cursor-pointer p-4 hover:bg-inpurBorder"
+      className={`flex gap-3 items-center cursor-pointer p-4 hover:bg-inpurBorder ${
+        chatInfo.participant.isBlocked && "bg-error/30"
+      }`}
       onClick={() => SelectChat(chatInfo)}
     >
-      <div className="w-[3rem] rounded-full relative">
+      <div className="w-[3rem] h-[3rem] rounded-full relative">
         <img
-          src="../public/avatar.jpg"
-          className="w-full h-full rounded-full"
+          src={`https://localhost:7257/Uploads/${chatInfo.participant.profilePicture}`}
+          className="w-full h-full rounded-full object-cover"
           alt="message-avatar"
         />
 
@@ -22,7 +24,7 @@ function ChatCard({ SelectChat, chatInfo, isOnline }) {
         )}
       </div>
       <div>
-        <span className="block">{chatInfo.username}</span>
+        <span className="block">{chatInfo.participant.userName}</span>
         <span className="block text-sm text-iconsGray">
           {chatInfo.lastMessage ? chatInfo.lastMessage : "No message yet"}
         </span>
@@ -38,6 +40,7 @@ ChatCard.propTypes = {
   SelectChat: PropTypes.func,
   chatInfo: PropTypes.object,
   isOnline: PropTypes.bool,
+  image: PropTypes.string,
 };
 
 export default ChatCard;

@@ -2,15 +2,19 @@ import { useEffect, useState } from "react";
 import Chat from "../Ui/Chat";
 import LeftSideBar from "../Ui/LeftSideBar";
 import MessagesList from "../Ui/MessagesList";
-import WelcomeToHome from "../Ui/WelcomeToHome";
 import { useQuery } from "@tanstack/react-query";
 import { useSignalRContext } from "../context/SignalRContext";
+import { Outlet, useLocation } from "react-router-dom";
 
 function Home() {
   const [ActiveChat, SetActiveChat] = useState(null);
   const [roomId, setRoomId] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState([]);
+  const location = useLocation();
   const newConnection = useSignalRContext();
+
+  const urlPath = location.pathname;
+  const isHome = urlPath === "/home";
 
   const { data } = useQuery({
     queryKey: ["currentUser"],
@@ -58,7 +62,7 @@ function Home() {
         await newConnection.invoke(
           "JoinPrivateChat",
           data.id,
-          ActiveChat.userId
+          ActiveChat.participant.id
         );
       }
     }
@@ -85,16 +89,17 @@ function Home() {
     >
       <LeftSideBar />
       <MessagesList setActiveChat={SetActiveChat} onlineUsers={onlineUsers} />
-      {ActiveChat && roomId ? (
+      {ActiveChat && roomId && isHome ? (
         <Chat
           user={ActiveChat}
           roomId={roomId}
+          isBlocked={ActiveChat.participant.isBlocked}
           isOnline={onlineUsers.some(
-            (user) => user.userId === ActiveChat.userId
+            (user) => user.participant.id === ActiveChat.participant.id
           )}
         />
       ) : (
-        <WelcomeToHome />
+        <Outlet />
       )}
       <div className="bg-gray-850 p-4 sm:hidden"></div>
     </div>

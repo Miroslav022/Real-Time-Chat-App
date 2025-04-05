@@ -31,7 +31,7 @@ function AddContact({ isOpen, setIsOpen }) {
     <>
       {isOpen && (
         <div className="fixed inset-0 bg-gray-800 bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-50 bg-[rgba(255,255,255,0.1)]">
-          <div className="bg-white w-full bg-myBgBlue max-w-md p-6 rounded-lg shadow-lg">
+          <div className="w-full bg-myBgBlue max-w-md p-6 rounded-lg shadow-lg">
             <div className="flex justify-between items-center">
               <h2 className="text-lg font-semibold text-gray-800">
                 Search Users

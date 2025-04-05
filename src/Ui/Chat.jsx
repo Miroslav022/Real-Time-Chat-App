@@ -9,6 +9,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMessages } from "../features/chat/useMessages";
 import { useSignalRContext } from "../context/SignalRContext";
 import { AlwaysScrollToBottom } from "./AlwaysScrollToBottom";
+import BlockedUserAlert from "./BlockedUserAlert";
 
 function Chat({ user, roomId, isOnline }) {
   const { messages: storedMessages } = useMessages(user.id);
@@ -17,6 +18,7 @@ function Chat({ user, roomId, isOnline }) {
   const [isTyping, setIsTyping] = useState(false);
   const [typingUser, setTypingUser] = useState();
   const connection = useSignalRContext();
+  const [isBlocked, setIsBlocked] = useState(user.participant.isBlocked);
 
   const { data } = useQuery({
     queryKey: ["currentUser"],
@@ -80,10 +82,10 @@ function Chat({ user, roomId, isOnline }) {
       <div className="border-b-2  border-myGray">
         <div className="p-4 flex justify-between">
           <div className="flex gap-5">
-            <ProfileImage />
+            <ProfileImage fileName={user.participant.profilePicture} />
             <div>
               <span className="block font-medium">
-                {user.username || user.userName}
+                {user.participant.username || user.participant.userName}
               </span>
               <p className="block font-normall text-myLightBlue">
                 {typingUser
@@ -99,40 +101,54 @@ function Chat({ user, roomId, isOnline }) {
           </div>
         </div>
       </div>
-      <div className="bg-myBgDark p-4 flex flex-col gap-4 overflow-y-auto scrollToBottom">
-        {storedMessages?.length === 0 && (
-          <span className="text-center p-3 text-messageGray">
-            No messages, start covnersation.
-          </span>
-        )}
+      {isBlocked ? (
+        <BlockedUserAlert
+          participantId={user.participant.id}
+          currentUserId={data.id}
+          handleIsBlockedState={setIsBlocked}
+        />
+      ) : (
+        <>
+          <div className="bg-myBgDark p-4 flex flex-col gap-4 overflow-y-auto scrollToBottom">
+            {storedMessages?.length === 0 && (
+              <span className="text-center p-3 text-messageGray">
+                No messages, start covnersation.
+              </span>
+            )}
 
-        {storedMessages?.map((message, key) => (
-          <Message message={message} currentUser={data.username} key={key} />
-        ))}
-        <AlwaysScrollToBottom />
-      </div>
-      <div className="flex gap-2 items-center p-4">
-        <RiAttachment2 size={30} />
-        <div className="w-full flex items-center">
-          <InputEmoji
-            color="#fff"
-            background="#202426"
-            borderColor="#26292B"
-            borderRadius="0.75rem"
-            value={text}
-            onChange={handleTyping}
-            onEnter={sendMessage}
-            placeholder="Type a message"
-          />
-          <button
-            type="submit"
-            className="bg-myLightBlue btn-sm rounded-full"
-            onClick={sendMessage}
-          >
-            Send
-          </button>
-        </div>
-      </div>
+            {storedMessages?.map((message, key) => (
+              <Message
+                message={message}
+                currentUser={data.username}
+                key={key}
+              />
+            ))}
+            <AlwaysScrollToBottom />
+          </div>
+          <div className="flex gap-2 items-center p-4">
+            <RiAttachment2 size={30} />
+            <div className="w-full flex items-center">
+              <InputEmoji
+                color="#fff"
+                background="#202426"
+                borderColor="#26292B"
+                borderRadius="0.75rem"
+                value={text}
+                onChange={handleTyping}
+                onEnter={sendMessage}
+                placeholder="Type a message"
+              />
+              <button
+                type="submit"
+                className="bg-myLightBlue btn-sm rounded-full"
+                onClick={sendMessage}
+              >
+                Send
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

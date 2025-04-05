@@ -8,10 +8,12 @@ import AddContact from "./AddContact";
 import ChatCard from "./ChatCard";
 import { useFetchConversations } from "../features/useFetchConversations";
 import DropDownSettings from "./DropDownSettings";
+import { useNavigate } from "react-router-dom";
 
 function MessagesList({ setActiveChat, onlineUsers }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSettingDropDownOpen, setIsSettingsDropDownOpen] = useState(false);
+  const navigation = useNavigate();
   const { data } = useQuery({
     queryKey: ["currentUser"],
   });
@@ -19,12 +21,13 @@ function MessagesList({ setActiveChat, onlineUsers }) {
 
   function SelectChat(user) {
     setActiveChat(user);
+    navigation("/home");
   }
 
   return (
     <div className="bg-gray-850 border-r-2 border-myGray flex flex-col h-screen">
       <div className="flex gap-5 p-4 items-center border-b-2 border-myGray">
-        <ProfileImage />
+        <ProfileImage fileName={data.profilePicture} />
         <div>
           <h2 className="font-medium">{data.username}</h2>
           <span className="text-iconsGray text-sm">My Account</span>
@@ -36,7 +39,9 @@ function MessagesList({ setActiveChat, onlineUsers }) {
           >
             <PiDotsThreeOutlineVertical size={20} />
           </div>
-          {isSettingDropDownOpen && <DropDownSettings />}
+          {isSettingDropDownOpen && (
+            <DropDownSettings handleIsModalOpen={setIsSettingsDropDownOpen} />
+          )}
         </div>
       </div>
 
@@ -71,7 +76,7 @@ function MessagesList({ setActiveChat, onlineUsers }) {
               className="text-center cursor-pointer"
               onClick={() => SelectChat(user)}
             >
-              <ProfileImage />
+              <ProfileImage fileName={user.profilePicture} />
               <span className="block mt-3 text-iconsGray font-medium text-[0.9rem]">
                 {user.userName}
               </span>
@@ -92,9 +97,11 @@ function MessagesList({ setActiveChat, onlineUsers }) {
             conversations.map((chat) => (
               <ChatCard
                 SelectChat={SelectChat}
-                key={chat.userId}
+                key={chat.id}
                 chatInfo={chat}
-                isOnline={onlineUsers.some((x) => x.userId === chat.userId)}
+                isOnline={onlineUsers.some(
+                  (x) => x.userId === chat.participant.id
+                )}
               />
             ))
           ) : (
