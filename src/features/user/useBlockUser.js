@@ -1,14 +1,14 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { UnblockUser } from "../../Services/apiUser";
+import { BlockUser } from "../../Services/apiUser";
 import toast from "react-hot-toast";
 
-export function useUnblockUser() {
+export function useBlockUser() {
   const queryClient = useQueryClient();
 
-  const { mutate: UnblockUserMutation } = useMutation({
-    mutationFn: UnblockUser,
+  const { mutateAsync: blockUserMutation } = useMutation({
+    mutationFn: BlockUser,
     onSuccess: () => {
-      toast.success("User has been successfully unblocked");
+      toast.success("User has been successfully blocked");
       queryClient.invalidateQueries({ queryKey: ["Conversations"] });
     },
     onError: (e) => {
@@ -16,5 +16,5 @@ export function useUnblockUser() {
       console.error(e);
     },
   });
-  return { UnblockUserMutation };
+  return { blockUserMutation };
 }

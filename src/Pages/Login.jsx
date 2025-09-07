@@ -4,8 +4,8 @@ import { Link } from "react-router-dom";
 import ValidationError from "../Ui/ValidationError";
 import { useLogin } from "../features/useLogin";
 import { useEffect, useState } from "react";
+
 function Login() {
-  // const navigate = useNavigate();
   const {
     register,
     handleSubmit,
@@ -14,11 +14,13 @@ function Login() {
   } = useForm();
 
   const { login, isLoading, errors: errorsApi } = useLogin();
+
   const [authError, setAuthError] = useState(null);
 
-  async function submitStep1(requestBody) {
+  async function handleLogin(requestBody) {
     login(requestBody);
   }
+
   useEffect(() => {
     handleServerErrors(errorsApi);
     function handleServerErrors(serverErrors) {
@@ -33,7 +35,7 @@ function Login() {
   }, [errorsApi, setError, errors]);
 
   return (
-    <form onSubmit={handleSubmit(submitStep1)} className="flex flex-col gap-5">
+    <form onSubmit={handleSubmit(handleLogin)} className="flex flex-col gap-5">
       <h1 className="text-5xl text-center">Hi!</h1>
       <p className="text-xl text-center">
         Type your email and password to log in.

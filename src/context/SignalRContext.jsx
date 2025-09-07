@@ -8,22 +8,26 @@ import {
 } from "react";
 import PropTypes from "prop-types";
 import * as signalR from "@microsoft/signalr";
+import { useAuth } from "./AuthProvider";
 
 const signalRContext = createContext(null);
 
 function SignalRProvider({ children }) {
   const [connection, setConnection] = useState(null);
+  const { token } = useAuth();
   const isConnected = useRef(false);
 
   const memoizedConnection = useMemo(() => {
     if (connection) return connection;
     const newConnection = new signalR.HubConnectionBuilder()
-      .withUrl("https://localhost:7257/chat", { withCredentials: true })
+      .withUrl("https://localhost:7257/chat", {
+        accessTokenFactory: () => token,
+      })
       .withAutomaticReconnect()
       .build();
 
     return newConnection;
-  }, [connection]);
+  }, [connection, token]);
 
   useEffect(() => {
     if (!isConnected.current) {

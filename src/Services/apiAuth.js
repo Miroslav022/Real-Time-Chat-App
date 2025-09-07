@@ -1,6 +1,6 @@
 import axiosInstance from "../api/axiosInstance";
 
-const BASE_URL = "https://localhost:7257/Api/Auth";
+const BASE_URL = "https://localhost:7257/api/Auth";
 export async function loginApi({ email, password }) {
   const response = await fetch(`${BASE_URL}/login`, {
     method: "POST",

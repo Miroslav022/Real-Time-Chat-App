@@ -6,9 +6,9 @@ export async function createConversation(data) {
   return response;
 }
 
-export async function getAllConversations(id) {
+export async function getAllConversations() {
   const chats = await axiosInstance.get(
-    `https://localhost:7257/api/Conversation/conversations?id=${id}`
+    `https://localhost:7257/api/Conversation/conversations`
   );
 
   return chats;
@@ -16,8 +16,14 @@ export async function getAllConversations(id) {
 
 export async function getMessages(conversationId) {
   const messages = await axiosInstance.get(
-    `https://localhost:7257/api/Message?conversationId=${conversationId}`
+    `https://localhost:7257/api/message?conversationId=${conversationId}`
   );
 
   return messages.data.value;
+}
+
+export async function createGroupConversation(data) {
+  const response = await axiosInstance.post("/Conversation/groupchat", data);
+
+  return response;
 }

@@ -25,8 +25,8 @@ function EditAccount() {
   }
 
   useEffect(() => {
-    setProfilePicture(`https://localhost:7257/Uploads/${user.profilePicture}`);
-  }, [setProfilePicture, user.profilePicture]);
+    setProfilePicture(`https://localhost:7257/Uploads/${user.displayImage}`);
+  }, [setProfilePicture, user.displayImage]);
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     const formData = new FormData();

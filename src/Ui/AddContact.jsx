@@ -3,18 +3,17 @@ import { useState } from "react";
 import axiosInstance from "../api/axiosInstance";
 import UserSearchCard from "./UserSearchCard";
 import { useConversation } from "../features/useConversation";
-import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "../context/AuthProvider";
+// import { useQuery } from "@tanstack/react-query";
 
 function AddContact({ isOpen, setIsOpen }) {
   const [search, setSearch] = useState("");
   const [users, setUsers] = useState([]);
   const { createConversation } = useConversation();
-  const { data } = useQuery({
-    queryKey: ["currentUser"],
-  });
+  const { user } = useAuth();
 
-  function onCreateConversation(user) {
-    createConversation({ createdBy: data.id, userId: user.id });
+  function onCreateConversation(userData) {
+    createConversation({ createdBy: user?.sub, userId: userData.id });
     setIsOpen(false);
     setUsers([]);
   }

@@ -1,18 +1,13 @@
-import { Outlet, useNavigate } from "react-router-dom";
-import { useAuth } from "../hooks/useAuth";
-import { useEffect } from "react";
+import { Navigate, Outlet } from "react-router-dom";
 import Spinner from "./Spinner";
 import { SignalRProvider } from "../context/SignalRContext";
+import { OnlineUsersProvider } from "../context/OnlineUsersContext";
+import { useAuth } from "../context/AuthProvider";
 
 function ProtectedRoute() {
-  const { user, isLoading } = useAuth();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!user && !isLoading) navigate("/");
-  }, [user, isLoading, navigate]);
-
-  if (isLoading) {
+  const { isLoading, user } = useAuth();
+  console.log(isLoading, user, ">>>>>>");
+  if (isLoading && !user) {
     return (
       <div className="w-full h-screen flex justify-center items-center">
         <Spinner />
@@ -20,9 +15,13 @@ function ProtectedRoute() {
     );
   }
 
+  if (!user && !isLoading) return <Navigate to="/home" replace />;
+
   return (
     <SignalRProvider>
-      <Outlet />
+      <OnlineUsersProvider>
+        <Outlet />
+      </OnlineUsersProvider>
     </SignalRProvider>
   );
 }

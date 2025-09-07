@@ -2,23 +2,25 @@ import { useEffect, useState } from "react";
 import Chat from "../Ui/Chat";
 import LeftSideBar from "../Ui/LeftSideBar";
 import MessagesList from "../Ui/MessagesList";
-import { useQuery } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useSignalRContext } from "../context/SignalRContext";
 import { Outlet, useLocation } from "react-router-dom";
+import { useOnlineUsers } from "../context/OnlineUsersContext";
+import { MessageMenuProvider } from "../context/MessageMenuContext";
+import { useAuth } from "../context/AuthProvider";
 
 function Home() {
   const [ActiveChat, SetActiveChat] = useState(null);
   const [roomId, setRoomId] = useState(null);
-  const [onlineUsers, setOnlineUsers] = useState([]);
+  const queryClient = useQueryClient();
+  // const [onlineUsers, setOnlineUsers] = useState([]);
   const location = useLocation();
   const newConnection = useSignalRContext();
+  const { state, dispatch } = useOnlineUsers();
 
   const urlPath = location.pathname;
   const isHome = urlPath === "/home";
-
-  const { data } = useQuery({
-    queryKey: ["currentUser"],
-  });
+  const { user } = useAuth();
 
   useEffect(() => {
     async function connection() {
@@ -29,18 +31,12 @@ function Home() {
       });
 
       newConnection.on("UserStatusChanged", (online_users) => {
-        setOnlineUsers(online_users);
+        dispatch({ type: "SET_INITIAL_STATE", payload: online_users });
       });
 
       newConnection.on("newOnlineUser", (newOnlineUser) => {
-        let alreadyExist = onlineUsers.some(
-          (x) => x.userId === newOnlineUser.userId
-        );
-        if (alreadyExist) return;
-
-        const data = new Set([...onlineUsers, newOnlineUser]);
-        console.log(Array.from(data));
-        setOnlineUsers(Array.from(data));
+        console.log(">>>", newOnlineUser);
+        dispatch({ type: "ADD_NEW_USER", payload: newOnlineUser });
       });
 
       newConnection.on("JoinedRoom", (roomId) => {
@@ -48,22 +44,17 @@ function Home() {
       });
 
       newConnection.on("UserWentOffline", (offlineUser) => {
-        console.log(offlineUser);
-        let filteredOnlineUsers = onlineUsers.filter((x) => {
-          console.log(x.userId, offlineUser);
-          return x.userId !== Number(offlineUser);
-        });
-        console.log(onlineUsers);
-        console.log(filteredOnlineUsers);
-        setOnlineUsers(filteredOnlineUsers);
+        dispatch({ type: "USER_WENT_OFLINE", payload: offlineUser });
+      });
+
+      newConnection.on("GroupChatCreated", (data) => {
+        console.log("New group Chat created>>>", data);
+        queryClient.invalidateQueries({ queryKey: ["Conversations"] });
       });
 
       if (ActiveChat) {
-        await newConnection.invoke(
-          "JoinPrivateChat",
-          data.id,
-          ActiveChat.participant.id
-        );
+        const coversationId = ActiveChat.id;
+        await newConnection.invoke("JoinPrivateChat", coversationId);
       }
     }
     try {
@@ -77,9 +68,10 @@ function Home() {
         newConnection.off("JoinedRoom");
         newConnection.off("UserStatusChanged");
         newConnection.off("newOnlineUser");
+        newConnection.off("GroupChatCreated");
       }
     };
-  }, [ActiveChat, data.id, onlineUsers, newConnection]);
+  }, [ActiveChat, user?.sub, state, newConnection, dispatch, queryClient]);
   if (newConnection == null) return;
 
   return (
@@ -88,16 +80,18 @@ function Home() {
       style={{ gridTemplateColumns: "6rem 22rem 5fr auto" }}
     >
       <LeftSideBar />
-      <MessagesList setActiveChat={SetActiveChat} onlineUsers={onlineUsers} />
+      <MessagesList setActiveChat={SetActiveChat} onlineUsers={state} />
       {ActiveChat && roomId && isHome ? (
-        <Chat
-          user={ActiveChat}
-          roomId={roomId}
-          isBlocked={ActiveChat.participant.isBlocked}
-          isOnline={onlineUsers.some(
-            (user) => user.participant.id === ActiveChat.participant.id
-          )}
-        />
+        <MessageMenuProvider>
+          <Chat
+            conversation={ActiveChat}
+            roomId={roomId}
+            isBlocked={false}
+            isOnline={state.some(
+              (user) => user.displayName === ActiveChat.displayName
+            )}
+          />
+        </MessageMenuProvider>
       ) : (
         <Outlet />
       )}

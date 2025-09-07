@@ -1,6 +1,6 @@
 import { PiDotsThreeOutlineVertical } from "react-icons/pi";
 import ProfileImage from "./ProfileImage";
-import { useQuery } from "@tanstack/react-query";
+// import { useQuery } from "@tanstack/react-query";
 import PropTypes from "prop-types";
 import { IoPersonAddSharp } from "react-icons/io5";
 import { useState } from "react";
@@ -9,27 +9,49 @@ import ChatCard from "./ChatCard";
 import { useFetchConversations } from "../features/useFetchConversations";
 import DropDownSettings from "./DropDownSettings";
 import { useNavigate } from "react-router-dom";
+import QuickMenu from "./QuickMenu";
+import OnlineUser from "./OnlineUser";
+import CreateGroupModal from "./CreateGroupModal";
+import { useAuth } from "../context/AuthProvider";
 
 function MessagesList({ setActiveChat, onlineUsers }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSettingDropDownOpen, setIsSettingsDropDownOpen] = useState(false);
+  const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
   const navigation = useNavigate();
-  const { data } = useQuery({
-    queryKey: ["currentUser"],
-  });
-  const { conversations } = useFetchConversations(data.id);
+  const { user } = useAuth();
+  // const { data } = useQuery({
+  //   queryKey: ["currentUser"],
+  // });
+  const { conversations } = useFetchConversations(user?.sub);
+
+  console.log("OnlineUsers>>>", onlineUsers);
 
   function SelectChat(user) {
+    console.log("user>>>", user);
     setActiveChat(user);
     navigation("/home");
+  }
+
+  function handleGroupSubmit(data) {
+    console.log("Group Created:", data);
+    // Call your API here
+  }
+
+  function handleIsOnline(chat) {
+    //Check this!!!
+    return (
+      !chat.isGroup &&
+      onlineUsers.some((x) => x.userId === chat.participants[0].id)
+    );
   }
 
   return (
     <div className="bg-gray-850 border-r-2 border-myGray flex flex-col h-screen">
       <div className="flex gap-5 p-4 items-center border-b-2 border-myGray">
-        <ProfileImage fileName={data.profilePicture} />
+        <ProfileImage fileName={user?.picture} />
         <div>
-          <h2 className="font-medium">{data.username}</h2>
+          <h2 className="font-medium">{user?.unique_name}</h2>
           <span className="text-iconsGray text-sm">My Account</span>
         </div>
         <div className="relative ml-auto cursor-pointer">
@@ -40,7 +62,9 @@ function MessagesList({ setActiveChat, onlineUsers }) {
             <PiDotsThreeOutlineVertical size={20} />
           </div>
           {isSettingDropDownOpen && (
-            <DropDownSettings handleIsModalOpen={setIsSettingsDropDownOpen} />
+            <DropDownSettings>
+              <QuickMenu handleIsModalOpen={setIsSettingsDropDownOpen} />
+            </DropDownSettings>
           )}
         </div>
       </div>
@@ -70,28 +94,34 @@ function MessagesList({ setActiveChat, onlineUsers }) {
       <div className="pl-4 pr-4 pt-4">
         <h2 className="font-medium text-xl">Online now</h2>
         <div className="flex gap-5 overflow-x-scroll pt-4">
-          {onlineUsers.map((user) => (
-            <div
-              key={user.userId}
-              className="text-center cursor-pointer"
-              onClick={() => SelectChat(user)}
-            >
-              <ProfileImage fileName={user.profilePicture} />
-              <span className="block mt-3 text-iconsGray font-medium text-[0.9rem]">
-                {user.userName}
-              </span>
-            </div>
-          ))}
+          {onlineUsers.map(
+            (user) =>
+              !user.isBlocked && (
+                <OnlineUser
+                  user={user}
+                  SelectChat={SelectChat}
+                  key={user.userId}
+                />
+              )
+          )}
         </div>
       </div>
 
       <div className="flex flex-col gap-5 flex-grow overflow-y-auto">
-        <h2 className="font-medium flex items-center gap-2 text-xl pl-4 pr-4 pt-4">
-          Messages
-          <span className="bg-myLightBlue text-sm rounded-xl w-6 text-center block">
-            20
-          </span>
-        </h2>
+        <div className="flex justify-between h-12 items-center gap-2 pl-4 pr-4 pt-4">
+          <h2 className="font-medium flex items-center gap-2 text-xl">
+            Messages
+            <span className="bg-myLightBlue text-sm rounded-xl w-6 text-center block">
+              20
+            </span>
+          </h2>
+          <div
+            className="bg-inpurBorder w-7 h-7 flex items-center justify-center rounded-full cursor-pointer"
+            onClick={() => setShowCreateGroupModal(true)}
+          >
+            <p>+</p>
+          </div>
+        </div>
         <div className="flex flex-col">
           {conversations?.length > 0 ? (
             conversations.map((chat) => (
@@ -99,9 +129,7 @@ function MessagesList({ setActiveChat, onlineUsers }) {
                 SelectChat={SelectChat}
                 key={chat.id}
                 chatInfo={chat}
-                isOnline={onlineUsers.some(
-                  (x) => x.userId === chat.participant.id
-                )}
+                isOnline={handleIsOnline(chat)}
               />
             ))
           ) : (
@@ -115,6 +143,12 @@ function MessagesList({ setActiveChat, onlineUsers }) {
       >
         <IoPersonAddSharp className="text-xl" />
       </div>
+      {showCreateGroupModal && (
+        <CreateGroupModal
+          onClose={() => setShowCreateGroupModal(false)}
+          onSubmit={handleGroupSubmit}
+        />
+      )}
       <AddContact isOpen={isModalOpen} setIsOpen={setIsModalOpen} />
     </div>
   );
