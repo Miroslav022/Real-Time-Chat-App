@@ -20,7 +20,7 @@ export function useFetchConversations() {
       console.log(conversations);
       return conversations;
     },
-    // enabled: !!user?.sub,
+
     staleTime: 5 * 60 * 1000,
   });
   return { conversations };

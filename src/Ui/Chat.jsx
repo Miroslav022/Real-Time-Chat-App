@@ -95,8 +95,8 @@ function Chat({ conversation, roomId, isOnline }) {
       );
       participantIds.push(user?.sub.toString());
       const message = {
-        conversationId: conversation.id,
-        senderId: user?.sub,
+        conversationId: parseInt(conversation.id),
+        senderId: parseInt(user?.sub),
         participantIds: participantIds,
         message: text,
         messageTypeId: 1,
