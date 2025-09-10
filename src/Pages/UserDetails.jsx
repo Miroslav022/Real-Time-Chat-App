@@ -21,7 +21,9 @@ function UserDetails() {
     });
     let response = await data.json();
     if (response?.isSuccess) {
-      navigate("/home");
+      navigate(
+        "/auth/login?success=Your account has been successfully created."
+      );
     } else {
       console.log(response);
       handleServerErrors(response?.errors);
@@ -30,7 +32,8 @@ function UserDetails() {
 
   function handleServerErrors(serverErrors) {
     serverErrors.forEach((err) => {
-      setError(err?.code, { type: "server", message: err.message });
+      err = err[0];
+      setError(err?.code, { type: "server", message: err.description });
     });
   }
 
@@ -119,7 +122,13 @@ function UserDetails() {
       <Controller
         name="phoneNumber"
         control={control}
-        rules={{ required: "Phone number is required" }}
+        rules={{
+          required: "Phone number is required",
+          minLength: {
+            value: 7,
+            message: "Phone number must contain at least 7 numbers",
+          },
+        }}
         render={({ field }) => (
           <PhoneInput
             {...field}

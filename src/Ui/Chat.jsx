@@ -25,9 +25,6 @@ const initialContextParams = {
 };
 
 function Chat({ conversation, roomId, isOnline }) {
-  // const { data } = useQuery({
-  //   queryKey: ["currentUser"],
-  // });
   const { user } = useAuth();
 
   const { messages: storedMessages } = useMessages(conversation.id);
@@ -40,6 +37,9 @@ function Chat({ conversation, roomId, isOnline }) {
   const [contextParams, setContextParams] = useState(initialContextParams);
   const [isOpen, setIsOpen] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
+
+  const participantId =
+    conversation?.participants?.[0]?.id || conversation?.userId;
 
   useEffect(() => {
     if (connection && connection.state === "Connected") {
@@ -63,8 +63,10 @@ function Chat({ conversation, roomId, isOnline }) {
   }, [connection, queryClient]);
 
   useEffect(() => {
-    // const isUserBlocked = conversation?.participants[0]?.isBlocked ?? conversation?.isBlocked;
-    const isUserBlocked = false;
+    const isUserBlocked =
+      conversation?.isBlocked ??
+      (!conversation?.isGroup && conversation?.participants?.[0]?.isBlocked);
+
     console.log(isUserBlocked);
     setIsBlocked(isUserBlocked);
   }, [conversation]);
@@ -162,7 +164,7 @@ function Chat({ conversation, roomId, isOnline }) {
                   <QuickUserMenu
                     handleIsOpen={setIsOpen}
                     currentUser={user?.sub}
-                    blockUserId={conversation.userId}
+                    blockUserId={participantId}
                     handleIsBlockedState={setIsBlocked}
                   />
                 </DropDownSettings>
@@ -173,7 +175,7 @@ function Chat({ conversation, roomId, isOnline }) {
       </div>
       {isBlocked ? (
         <BlockedUserAlert
-          participantId={conversation?.userId}
+          participantId={participantId}
           currentUserId={user?.sub}
           handleIsBlockedState={setIsBlocked}
         />

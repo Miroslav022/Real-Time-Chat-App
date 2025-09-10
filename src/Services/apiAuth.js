@@ -2,13 +2,12 @@ import axiosInstance from "../api/axiosInstance";
 
 const BASE_URL = "https://localhost:7257/api/Auth";
 export async function loginApi({ email, password }) {
-  const response = await fetch(`${BASE_URL}/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
-    credentials: "include",
-  });
-  return response;
+  // const response = await fetch(`${BASE_URL}/login`, {
+  //   method: "POST",
+  //   headers: { "Content-Type": "application/json" },
+  //   body: JSON.stringify({ email, password }),
+  // });
+  return await axiosInstance.post("/Auth/login", { email, password });
 }
 
 export async function refreshAccessToken() {
