@@ -7,7 +7,8 @@ export async function loginApi({ email, password }) {
   //   headers: { "Content-Type": "application/json" },
   //   body: JSON.stringify({ email, password }),
   // });
-  return await axiosInstance.post("/Auth/login", { email, password });
+  const result = await axiosInstance.post("/Auth/login", { email, password });
+  return result;
 }
 
 export async function refreshAccessToken() {

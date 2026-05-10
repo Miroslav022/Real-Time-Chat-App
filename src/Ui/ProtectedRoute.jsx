@@ -6,7 +6,7 @@ import { useAuth } from "../context/AuthProvider";
 
 function ProtectedRoute() {
   const { isLoading, user } = useAuth();
-  console.log(isLoading, user, ">>>>>>");
+
   if (isLoading && !user) {
     return (
       <div className="w-full h-screen flex justify-center items-center">
@@ -15,7 +15,7 @@ function ProtectedRoute() {
     );
   }
 
-  if (!user && !isLoading) return <Navigate to="/home" replace />;
+  if (!user && !isLoading) return <Navigate to="/auth/login" replace />;
 
   return (
     <SignalRProvider>

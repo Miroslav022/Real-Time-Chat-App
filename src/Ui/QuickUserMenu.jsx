@@ -13,8 +13,8 @@ function QuickUserMenu({
   async function handleUserBlock() {
     await blockUserMutation(
       {
-        BlockedUserId: blockUserId,
-        userId: currentUser,
+        BlockedUserId: parseInt(blockUserId),
+        userId: parseInt(currentUser),
       },
       {
         onSuccess: () => {

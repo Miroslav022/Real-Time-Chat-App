@@ -12,19 +12,25 @@ export function useLogin() {
 
   const { mutate: login, isLoading } = useMutation({
     mutationFn: ({ email, password }) => loginApi({ email, password }),
-    onSuccess: async (response) => {
-      if (!response.ok) {
-        let responseData = await response.json();
-        setErrors(responseData);
-      }
+    onSuccess: (response) => {
       if (!response) throw new Error("There is a problem with response data");
-      const result = await response.text();
+
+      if (response.status !== 200) {
+        setErrors(response.data);
+        return;
+      }
+
+      const result = response.data;
       loginUser(result);
       navigate("/home");
     },
     onError: (error) => {
-      toast.error("Something went wrong");
-      console.log("Error message:" + error.response);
+      if (error.response && error.response.data && error.response.data.errors) {
+        toast.error(error.response.data.errors[0][0].description);
+      } else {
+        toast.error("Something went wrong");
+      }
+      console.error("Error message:", error.response);
     },
   });
   return { login, isLoading, errors };

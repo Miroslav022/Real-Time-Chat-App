@@ -8,7 +8,18 @@ export async function createConversation(data) {
 
 export async function getAllConversations() {
   const chats = await axiosInstance.get(
-    `https://localhost:7257/api/Conversation/conversations`
+    `https://localhost:7257/api/Conversation/conversations`,
+  );
+
+  return chats;
+}
+
+export async function searchConversations(searchTerm) {
+  const chats = await axiosInstance.get(
+    `https://localhost:7257/api/conversation/conversations/search`,
+    {
+      params: { searchTerm },
+    },
   );
 
   return chats;
@@ -16,7 +27,7 @@ export async function getAllConversations() {
 
 export async function getMessages(conversationId) {
   const messages = await axiosInstance.get(
-    `https://localhost:7257/api/message?conversationId=${conversationId}`
+    `https://localhost:7257/api/message?conversationId=${conversationId}`,
   );
 
   return messages.data.value;

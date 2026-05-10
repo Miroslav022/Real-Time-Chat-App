@@ -14,9 +14,12 @@ export function useFetchConversations() {
       if (result && result.data && result.data.isFailure) return;
       const conversationsResult = result.data.value;
       console.log(">>>data", conversationsResult);
-      const conversations = conversationsResult.sort(
-        (a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt)
-      );
+      const conversations = conversationsResult.sort((a, b) => {
+        const aUnread = (a.unreadCount ?? 0) > 0 ? 1 : 0;
+        const bUnread = (b.unreadCount ?? 0) > 0 ? 1 : 0;
+        if (bUnread !== aUnread) return bUnread - aUnread;
+        return new Date(b.lastMessageAt) - new Date(a.lastMessageAt);
+      });
       console.log(conversations);
       return conversations;
     },

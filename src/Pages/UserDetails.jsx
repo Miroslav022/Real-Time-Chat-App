@@ -2,9 +2,17 @@ import { Controller, useForm } from "react-hook-form";
 import { PhoneInput } from "react-international-phone";
 import { Link, useNavigate } from "react-router-dom";
 import ValidationError from "../Ui/ValidationError";
+import { useRef, useState } from "react";
+
+const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
 function UserDetails() {
   const navigate = useNavigate();
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [imageError, setImageError] = useState(null);
+  const fileInputRef = useRef(null);
+
   const {
     register,
     control,
@@ -13,16 +21,43 @@ function UserDetails() {
     formState: { errors },
   } = useForm();
 
+  function handleImageChange(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      setImageError(
+        "Unsupported format. Please upload a JPEG, PNG, WebP, or GIF image.",
+      );
+      setPreviewUrl(null);
+      setSelectedFile(null);
+      e.target.value = "";
+      return;
+    }
+    setImageError(null);
+    setSelectedFile(file);
+    const reader = new FileReader();
+    reader.onload = (ev) => setPreviewUrl(ev.target.result);
+    reader.readAsDataURL(file);
+  }
+
   async function submitStep2(requestBody) {
+    const formData = new FormData();
+    formData.append("username", requestBody.username);
+    formData.append("email", requestBody.email);
+    formData.append("password", requestBody.password);
+    formData.append("phoneNumber", requestBody.phoneNumber);
+    if (selectedFile) {
+      formData.append("profileImage", selectedFile);
+    }
+
     const data = await fetch("https://localhost:7257/Api/Auth/registration", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(requestBody),
+      body: formData,
     });
     let response = await data.json();
     if (response?.isSuccess) {
       navigate(
-        "/auth/login?success=Your account has been successfully created."
+        "/auth/login?success=Your account has been successfully created.",
       );
     } else {
       console.log(response);
@@ -44,13 +79,21 @@ function UserDetails() {
     >
       <div className="flex flex-col items-center gap-5">
         <img
-          src="../public/avatar.jpg"
+          src={previewUrl ?? "/avatar.jpg"}
           alt="avatar"
-          className="w-1/3 rounded-full"
+          className="w-1/3 rounded-full object-cover aspect-square"
         />
-        <p>Upload profile image</p>
-
-        <input type="file" className="file-input w-full " />
+        <label className="cursor-pointer bg-myLightBlue text-white px-3 py-1 rounded-lg text-sm">
+          {previewUrl ? "Change image" : "Upload profile image"}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            className="hidden"
+            onChange={handleImageChange}
+          />
+        </label>
+        {imageError && <ValidationError error={imageError} />}
       </div>
       <label className="input input-bordered flex items-center gap-2">
         <svg

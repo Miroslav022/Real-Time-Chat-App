@@ -1,4 +1,3 @@
-import { useAuth } from "../hooks/useAuth";
 import { useForm } from "react-hook-form";
 // import ValidationError from "./ValidationError";
 import { useEffect, useState } from "react";
@@ -6,6 +5,7 @@ import { useEditUser } from "../features/user/useEditUser";
 import { useUpdateProfileImage } from "../features/user/useUpdateProfileImage";
 import { MdArrowBackIosNew } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthProvider";
 
 function EditAccount() {
   const { user } = useAuth();
@@ -16,7 +16,7 @@ function EditAccount() {
   const { register, handleSubmit } = useForm({
     defaultValues: {
       email: user.email,
-      username: user.username,
+      username: user.unique_name,
     },
   });
 
@@ -25,16 +25,15 @@ function EditAccount() {
   }
 
   useEffect(() => {
-    setProfilePicture(`https://localhost:7257/Uploads/${user.displayImage}`);
-  }, [setProfilePicture, user.displayImage]);
+    setProfilePicture(`https://localhost:7257/Uploads/${user.picture}`);
+  }, [setProfilePicture, user.picture]);
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     const formData = new FormData();
     formData.append("file", file);
     if (file) {
       const imageUrl = URL.createObjectURL(file);
-      console.log({ Id: user.id.toString(), File: formData });
-      updateProfileImage({ Id: user.id.toString(), File: formData });
+      updateProfileImage({ Id: user.sub, File: formData });
       setProfilePicture(imageUrl);
     }
   };
@@ -65,8 +64,7 @@ function EditAccount() {
       <form
         className="space-y-5 flex flex-col"
         onSubmit={handleSubmit((data) => {
-          console.log({ ...data, id: user.id, image: profilePicture });
-          editUserHandler({ ...data, id: user.id, image: profilePicture });
+          editUserHandler({ ...data, id: user.sub, image: profilePicture });
         })}
       >
         <div className="grid gap-3">

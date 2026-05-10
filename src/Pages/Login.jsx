@@ -3,7 +3,7 @@ import "react-international-phone/style.css";
 import { Link, useSearchParams } from "react-router-dom";
 import ValidationError from "../Ui/ValidationError";
 import { useLogin } from "../features/useLogin";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 
 function Login() {
@@ -15,19 +15,20 @@ function Login() {
   } = useForm();
   const { login, isLoading, errors: errorsApi } = useLogin();
   const [authError, setAuthError] = useState(null);
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const success = searchParams.get("success");
+  const successShown = useRef(false);
   async function handleLogin(requestBody) {
     login(requestBody);
   }
 
   useEffect(() => {
-    if (success) {
+    if (success && !successShown.current) {
+      successShown.current = true;
       toast.success(success, { toastId: "login-success" });
-      searchParams.delete("success");
-      window.history.replaceState({}, "", `${window.location.pathname}`);
+      setSearchParams({}, { replace: true });
     }
-  }, [success, searchParams]);
+  }, [success, setSearchParams]);
 
   useEffect(() => {
     handleServerErrors(errorsApi);

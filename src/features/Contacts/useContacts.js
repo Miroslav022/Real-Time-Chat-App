@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { getContacts } from "../../Services/apiContacts";
-import { useAuth } from "../../hooks/useAuth";
+import { useAuth } from "../../context/AuthProvider";
 
 export function useContacts() {
   const { user } = useAuth();
-  const userId = user?.id;
+  const userId = user?.sub ? Number(user.sub) : null;
 
   const {
     data: contacts = [],

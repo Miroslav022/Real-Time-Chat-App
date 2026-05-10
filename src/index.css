@@ -36,21 +36,23 @@ button {
   height: 50px !important;
 }
 
-.icon-style {
-  color: theme("colors.iconsGray");
-  font-size: 40px;
-  border-radius: 100%;
-  padding: 1rem;
-  transition: all 0.3s ease-in-out;
-}
-.icon-style:hover {
-  background-color: theme("colors.myLightBlue");
-  color: #fff;
-}
+@layer components {
+  .icon-style {
+    color: theme("colors.iconsGray");
+    font-size: 40px;
+    border-radius: 100%;
+    padding: 1rem;
+    transition: all 0.3s ease-in-out;
+  }
+  .icon-style:hover {
+    background-color: theme("colors.myLightBlue");
+    color: #fff;
+  }
 
-.active {
-  background-color: theme("colors.myLightBlue");
-  color: #fff;
+  .active {
+    background-color: theme("colors.myLightBlue");
+    color: #fff;
+  }
 }
 
 /* :root {
