@@ -11,9 +11,16 @@ function UserSearchCard({ user, onCreateConversation }) {
     >
       <div className="flex items-center">
         <img
-          src="../public/avatar.jpg"
-          alt="asda"
-          className="w-10 h-10 rounded-full mr-4"
+          src={
+            user.profilePicture
+              ? `https://localhost:7257/Uploads/${user.profilePicture}`
+              : "/avatar.jpg"
+          }
+          onError={(e) => {
+            e.currentTarget.src = "/avatar.jpg";
+          }}
+          alt="avatar"
+          className="w-10 h-10 rounded-full mr-4 object-cover"
         />
         <div>
           <p className="text-gray-800 font-medium">{user.userName}</p>

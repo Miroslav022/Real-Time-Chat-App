@@ -6,13 +6,15 @@ import { RiAttachment2 } from "react-icons/ri";
 import { IoArrowBack } from "react-icons/io5";
 import PropTypes from "prop-types";
 import Message from "./Message";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useMessages } from "../features/chat/useMessages";
+import Spinner from "./Spinner";
 import { useSignalRContext } from "../context/SignalRContext";
 import { AlwaysScrollToBottom } from "./AlwaysScrollToBottom";
 import BlockedUserAlert from "./BlockedUserAlert";
 import DropDownSettings from "./DropDownSettings";
 import QuickUserMenu from "./QuickUserMenu";
+import GroupDetailsModal from "./GroupDetailsModal";
 import ContextMenu from "./ContextMenu";
 import { useMessageMenu } from "../context/MessageMenuContext";
 import ReplyToMessage from "./ReplyToMessage";
@@ -23,7 +25,11 @@ import {
   upsertMessage,
 } from "../features/chat/messageStatus.ts";
 import { uploadImages } from "../Services/apiMessage";
-// import { useFetchConversations } from "../features/useFetchConversations";
+import { useContacts } from "../features/Contacts/useContacts";
+import { addContact } from "../Services/apiContacts";
+import { IoPersonAddSharp } from "react-icons/io5";
+import { useSettings } from "../context/SettingsContext";
+import { useOnlineUsers } from "../context/OnlineUsersContext";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
@@ -35,7 +41,10 @@ const initialContextParams = {
 
 function Chat({ conversation, isOnline, currentOpenConversationId, onBack }) {
   const { user } = useAuth();
-  const { messages: storedMessages } = useMessages(conversation.id);
+  const { settings } = useSettings();
+  const { state: onlineUsers } = useOnlineUsers();
+  const { messages: storedMessages, isLoading: isLoadingMessages } =
+    useMessages(conversation.id);
   const queryClient = useQueryClient();
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
@@ -47,10 +56,30 @@ function Chat({ conversation, isOnline, currentOpenConversationId, onBack }) {
   const connection = useSignalRContext();
   const [contextParams, setContextParams] = useState(initialContextParams);
   const [isSettingsOpen, setIsOpen] = useState(false);
+  const [isGroupDetailsOpen, setIsGroupDetailsOpen] = useState(false);
   const [blockedOverride, setBlockedOverride] = useState(null);
+  const [bannerDismissed, setBannerDismissed] = useState(false);
   const typingCooldownRef = useRef(null);
   const typingUserTimeoutRef = useRef(null);
   const fileInputRef = useRef(null);
+
+  const { contacts } = useContacts();
+
+  const participantId = !conversation?.isGroup
+    ? (conversation?.participants?.[0]?.id ?? conversation?.userId)
+    : null;
+
+  const isInContacts =
+    conversation?.isGroup ||
+    contacts.some((c) => Number(c.userId) === Number(participantId));
+
+  const { mutate: addToContacts, isPending: isAddingContact } = useMutation({
+    mutationFn: addContact,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      setBannerDismissed(true);
+    },
+  });
 
   const hideTypingIndicator = useCallback(() => {
     setTypingUser("");
@@ -70,6 +99,7 @@ function Chat({ conversation, isOnline, currentOpenConversationId, onBack }) {
 
   useEffect(() => {
     setBlockedOverride(null);
+    setBannerDismissed(false);
   }, [conversation?.id]);
 
   useEffect(() => {
@@ -415,11 +445,11 @@ function Chat({ conversation, isOnline, currentOpenConversationId, onBack }) {
       <div className="border-b-2  border-myGray">
         <div className="p-4 flex justify-between">
           <div className="flex gap-5 items-center">
-            {/* Back button — mobile only */}
+            {/* Back button */}
             {onBack && (
               <button
                 onClick={onBack}
-                className="lg:hidden text-iconsGray hover:text-white transition-colors flex-shrink-0"
+                className="text-iconsGray hover:text-white transition-colors flex-shrink-0"
                 aria-label="Back to conversations"
               >
                 <IoArrowBack size={22} />
@@ -433,9 +463,21 @@ function Chat({ conversation, isOnline, currentOpenConversationId, onBack }) {
               <p className="block font-normall text-myLightBlue">
                 {typingUser
                   ? typingUser + " is Typing..."
-                  : isOnline
-                    ? "Online"
-                    : "Offline"}
+                  : conversation?.isGroup
+                    ? (() => {
+                        const participants = conversation?.participants ?? [];
+                        const onlineCount = participants.filter((p) =>
+                          onlineUsers.some((u) => u.userId === p.id),
+                        ).length;
+                        return onlineCount > 0
+                          ? `${onlineCount} of ${participants.length} online`
+                          : `${participants.length} member${
+                              participants.length !== 1 ? "s" : ""
+                            }`;
+                      })()
+                    : isOnline
+                      ? "Online"
+                      : "Offline"}
               </p>
             </div>
           </div>
@@ -452,8 +494,20 @@ function Chat({ conversation, isOnline, currentOpenConversationId, onBack }) {
                     currentUser={user?.sub}
                     blockUserId={otherParticipantId}
                     handleIsBlockedState={setBlockedOverride}
+                    isGroup={conversation?.isGroup}
+                    conversationId={Number(conversation?.id)}
+                    onGroupDetails={() => {
+                      setIsOpen(false);
+                      setIsGroupDetailsOpen(true);
+                    }}
                   />
                 </DropDownSettings>
+              )}
+              {isGroupDetailsOpen && (
+                <GroupDetailsModal
+                  conversation={conversation}
+                  onClose={() => setIsGroupDetailsOpen(false)}
+                />
               )}
             </div>
           </div>
@@ -467,35 +521,84 @@ function Chat({ conversation, isOnline, currentOpenConversationId, onBack }) {
         />
       ) : (
         <>
-          <div
-            className="bg-myBgDark p-4 flex flex-col gap-4 overflow-y-auto scrollToBottom"
-            onDragOver={handleDragOver}
-            onDrop={handleDrop}
-          >
-            {messages?.length === 0 && (
-              <span className="text-center p-3 text-messageGray">
-                No messages, start covnersation.
-              </span>
+          <div className="flex flex-col overflow-hidden min-h-0 flex-1">
+            {!isInContacts && !bannerDismissed && (
+              <div className="flex items-center gap-3 px-4 py-3 bg-[#0d1f26] border-b border-myGray flex-shrink-0">
+                <img
+                  src={`https://localhost:7257/Uploads/${conversation.displayImage}`}
+                  className="w-10 h-10 rounded-full object-cover flex-shrink-0 ring-2 ring-myLightBlue/40"
+                  alt=""
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="text-white font-semibold text-sm truncate">
+                    {conversation.participants?.[0]?.userName ||
+                      conversation.participants?.[0]?.phoneNumber ||
+                      conversation.displayName}
+                  </p>
+                  <p className="text-iconsGray text-xs mt-0.5">
+                    {conversation.participants?.[0]?.phoneNumber
+                      ? conversation.participants[0].phoneNumber
+                      : "Not in your contacts"}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <button
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-myLightBlue hover:bg-myLightBlue/80 text-white font-semibold text-xs disabled:opacity-50 transition-colors"
+                    disabled={isAddingContact || !participantId}
+                    onClick={() => addToContacts(parseInt(participantId, 10))}
+                  >
+                    <IoPersonAddSharp size={13} />
+                    {isAddingContact ? "Adding..." : "Add Contact"}
+                  </button>
+                  <button
+                    className="w-7 h-7 flex items-center justify-center rounded-full text-iconsGray hover:text-white hover:bg-myGray transition-colors text-sm"
+                    onClick={() => setBannerDismissed(true)}
+                    aria-label="Dismiss"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
             )}
-            {messages?.map((message) => (
-              <Message
-                onContextMenu={handleContextMenu}
-                message={message}
-                currentUser={user?.unique_name}
-                currentUserId={user?.sub}
-                isGroupChat={conversation.isGroup}
-                recipientsCount={conversation?.participants?.length}
-                key={message.id}
-              />
-            ))}
+            <div
+              className="bg-myBgDark p-4 flex flex-col overflow-y-auto scrollToBottom flex-1"
+              style={{ gap: settings.compactMode ? "4px" : "16px" }}
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+            >
+              {isLoadingMessages ? (
+                <div className="flex items-center justify-center flex-1 h-full">
+                  <Spinner />
+                </div>
+              ) : (
+                <>
+                  {messages?.length === 0 && (
+                    <span className="text-center p-3 text-messageGray">
+                      No messages, start covnersation.
+                    </span>
+                  )}
+                  {messages?.map((message) => (
+                    <Message
+                      onContextMenu={handleContextMenu}
+                      message={message}
+                      currentUser={user?.unique_name}
+                      currentUserId={user?.sub}
+                      isGroupChat={conversation.isGroup}
+                      recipientsCount={conversation?.participants?.length}
+                      key={message.id}
+                    />
+                  ))}
+                </>
+              )}
 
-            <AlwaysScrollToBottom />
-            {contextParams.isSettingsOpen && (
-              <ContextMenu
-                contextParams={contextParams}
-                contextMenuCloseHandler={handleCloseContextMenu}
-              />
-            )}
+              <AlwaysScrollToBottom />
+              {contextParams.isSettingsOpen && (
+                <ContextMenu
+                  contextParams={contextParams}
+                  contextMenuCloseHandler={handleCloseContextMenu}
+                />
+              )}
+            </div>
           </div>
           <div className="p-4">
             {messageMenuState.action == "replyToMessage" && <ReplyToMessage />}
@@ -548,7 +651,7 @@ function Chat({ conversation, isOnline, currentOpenConversationId, onBack }) {
                   borderRadius="0.75rem"
                   value={text}
                   onChange={handleTyping}
-                  onEnter={sendMessage}
+                  onEnter={settings.enterToSend ? sendMessage : undefined}
                   placeholder="Type a message"
                 />
                 <button

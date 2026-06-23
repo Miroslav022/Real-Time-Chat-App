@@ -1,4 +1,3 @@
-import { CiBookmarkCheck } from "react-icons/ci";
 import { MdDeleteForever } from "react-icons/md";
 import propTypes from "prop-types";
 import { useRef } from "react";
@@ -38,10 +37,7 @@ function ContextMenu({ contextParams, contextMenuCloseHandler }) {
         >
           <MdDeleteForever className="text-xl" /> Delete message
         </li>
-        <li className="font-medium text-lg pt-2 pb-2 pl-1 pr-1 text-white flex gap-2 items-center">
-          <CiBookmarkCheck className="text-xl" />
-          Save
-        </li>
+
       </ul>
     </div>
   );

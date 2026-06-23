@@ -33,8 +33,20 @@ export async function getMessages(conversationId) {
   return messages.data.value;
 }
 
-export async function createGroupConversation(data) {
-  const response = await axiosInstance.post("/Conversation/groupchat", data);
+export async function createGroupConversation(formData) {
+  const response = await axiosInstance.post(
+    "/Conversation/groupchat",
+    formData,
+  );
+
+  return response;
+}
+
+export async function updateGroupImage(conversationId, formData) {
+  const response = await axiosInstance.put(
+    `/Conversation/groupchat/${conversationId}/image`,
+    formData,
+  );
 
   return response;
 }

@@ -1,5 +1,5 @@
 import { useForm } from "react-hook-form";
-// import ValidationError from "./ValidationError";
+import ValidationError from "./ValidationError";
 import { useEffect, useState } from "react";
 import { useEditUser } from "../features/user/useEditUser";
 import { useUpdateProfileImage } from "../features/user/useUpdateProfileImage";
@@ -13,7 +13,11 @@ function EditAccount() {
   const { editUserHandler, isLoading } = useEditUser();
   const { updateProfileImage, isUpdating } = useUpdateProfileImage();
   const navigation = useNavigate();
-  const { register, handleSubmit } = useForm({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
     defaultValues: {
       email: user.email,
       username: user.unique_name,
@@ -82,11 +86,10 @@ function EditAccount() {
               type="text"
               className="grow"
               placeholder="Email"
-              // {...register("email", { required: "Email is required" })}
-              {...register("email")}
+              {...register("email", { required: "Email is required" })}
             />
           </label>
-          {/* {errors?.email && <ValidationError error={errors?.email.message} />} */}
+          {errors?.email && <ValidationError error={errors?.email.message} />}
           <label className="input input-bordered flex items-center gap-2">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -100,13 +103,12 @@ function EditAccount() {
               type="text"
               className="grow"
               placeholder="Username"
-              // {...register("username", { required: "username is required" })}
-              {...register("username")}
+              {...register("username", { required: "Username is required" })}
             />
           </label>
-          {/* {errors?.username && (
+          {errors?.username && (
             <ValidationError error={errors?.username.message} />
-          )} */}
+          )}
           <label className="input input-bordered flex items-center gap-2">
             <svg
               xmlns="http://www.w3.org/2000/svg"

@@ -13,6 +13,7 @@ import QuickMenu from "./QuickMenu";
 import OnlineUser from "./OnlineUser";
 import CreateGroupModal from "./CreateGroupModal";
 import { useAuth } from "../context/AuthProvider";
+import { useContacts } from "../features/Contacts/useContacts";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSearchConversations } from "../features/useSearchConversations";
 
@@ -28,6 +29,7 @@ function MessagesList({ setActiveChat, onlineUsers }) {
   // const { data } = useQuery({
   //   queryKey: ["currentUser"],
   // });
+  const { contacts } = useContacts();
   const { conversations } = useFetchConversations(user?.sub);
   const { conversations: searchedConversations, isSearchingConversations } =
     useSearchConversations(debouncedSearchTerm);
@@ -81,7 +83,7 @@ function MessagesList({ setActiveChat, onlineUsers }) {
   }
 
   return (
-    <div className="bg-gray-850 flex flex-col h-full">
+    <div className="bg-gray-850 flex flex-col h-full overflow-hidden">
       <div className="flex gap-5 p-4 items-center border-b-2 border-myGray">
         <ProfileImage fileName={user?.picture} />
         <div>
@@ -143,7 +145,7 @@ function MessagesList({ setActiveChat, onlineUsers }) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-5 flex-grow overflow-y-auto">
+      <div className="flex flex-col gap-5 flex-grow overflow-y-auto min-h-0">
         <div className="flex justify-between h-12 items-center gap-2 pl-4 pr-4 pt-4">
           <h2 className="font-medium flex items-center gap-2 text-xl">
             Messages
@@ -154,8 +156,19 @@ function MessagesList({ setActiveChat, onlineUsers }) {
             )}
           </h2>
           <div
-            className="bg-inpurBorder w-7 h-7 flex items-center justify-center rounded-full cursor-pointer"
-            onClick={() => setShowCreateGroupModal(true)}
+            className={`bg-inpurBorder w-7 h-7 flex items-center justify-center rounded-full ${
+              contacts?.length > 0
+                ? "cursor-pointer"
+                : "cursor-not-allowed opacity-40"
+            }`}
+            onClick={() =>
+              contacts?.length > 0 && setShowCreateGroupModal(true)
+            }
+            title={
+              contacts?.length === 0
+                ? "Add contacts first to create a group"
+                : "Create group"
+            }
           >
             <p>+</p>
           </div>

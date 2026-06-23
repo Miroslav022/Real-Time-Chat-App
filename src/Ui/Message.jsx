@@ -6,6 +6,7 @@ import { useMessageMenu } from "../context/MessageMenuContext";
 import { getOutboundStatusInfo } from "../features/chat/messageStatus.ts";
 import { API_ORIGIN } from "../api/axiosInstance";
 import { FaCheck } from "react-icons/fa6";
+import { useSettings } from "../context/SettingsContext";
 
 const messageStyle = {
   sent: "bg-myLightBlue ml-auto w-fit max-w-xs p-3 rounded-l-lg rounded-b-lg text-black",
@@ -28,6 +29,7 @@ function Message({
   const minutes = String(date.getUTCMinutes()).padStart(2, "0");
   const ref = useRef();
   const { dispatch } = useMessageMenu();
+  const { settings } = useSettings();
   const [lightboxUrl, setLightboxUrl] = useState(null);
 
   const media = message.media ?? message.Media;
@@ -61,9 +63,10 @@ function Message({
   const containerStyle = isSentByCurrentUser
     ? messageStyle.sentBox
     : messageStyle.receivedBox;
+  const padding = settings.compactMode ? "p-1.5" : "p-3";
   const bubbleStyle = isSentByCurrentUser
-    ? messageStyle.sent
-    : messageStyle.received;
+    ? `bg-myLightBlue ml-auto w-fit max-w-xs ${padding} rounded-l-lg rounded-b-lg text-black`
+    : `bg-myGray w-fit max-w-xl ${padding} rounded-r-lg rounded-b-lg text-messageGray`;
 
   function onMessageActionMenuClick() {
     const rect = ref.current.getBoundingClientRect();

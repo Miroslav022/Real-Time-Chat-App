@@ -1,7 +1,7 @@
 import axiosInstance from "../api/axiosInstance";
 
 export async function EditUser(userData) {
-  const response = axiosInstance.patch(`/User/${userData.id}`, userData);
+  const response = await axiosInstance.patch(`/User/${userData.id}`, userData);
   return response;
 }
 

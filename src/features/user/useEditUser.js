@@ -12,9 +12,22 @@ export function useEditUser() {
       toast.success("You've successfully updated your account");
     },
     onError: (e) => {
-      const { errors } = e.response.data;
-      const arrayOfErros = Object.values(errors);
-      arrayOfErros.map((error) => toast.error(error));
+      const errors = e?.response?.data?.errors;
+      if (errors) {
+        Object.values(errors).forEach((error) => {
+          const message =
+            typeof error === "string"
+              ? error
+              : error?.description || error?.message || "Something went wrong";
+          toast.error(message);
+        });
+      } else {
+        const message =
+          e?.response?.data?.message ||
+          e?.response?.data?.title ||
+          "Something went wrong";
+        toast.error(String(message));
+      }
     },
   });
   return { editUserHandler, isLoading };

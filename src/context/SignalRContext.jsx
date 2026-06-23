@@ -41,12 +41,24 @@ function SignalRProvider({ children }) {
         .catch((err) => console.log("SignalR Connection", err));
     }
 
-    // return () => {
-    //   memoizedConnection.stop();
-    //   console.log("SignalR Disconnected");
-    //   isConnected.current = false;
-    // };
-  }, [memoizedConnection]);
+    const handleBeforeUnload = () => {
+      fetch("https://localhost:7257/Api/Auth/logout", {
+        method: "POST",
+        credentials: "include",
+        keepalive: true,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [memoizedConnection, token]);
 
   return (
     <signalRContext.Provider value={memoizedConnection}>

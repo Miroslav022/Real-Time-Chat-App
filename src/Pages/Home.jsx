@@ -2,12 +2,39 @@ import { useEffect, useRef, useState } from "react";
 import Chat from "../Ui/Chat";
 import LeftSideBar from "../Ui/LeftSideBar";
 import MessagesList from "../Ui/MessagesList";
+import ContactsPanel from "../Ui/ContactsPanel";
+import SettingsPage from "../Ui/SettingsPage";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSignalRContext } from "../context/SignalRContext";
 import { Outlet, useLocation } from "react-router-dom";
 import { useOnlineUsers } from "../context/OnlineUsersContext";
 import { MessageMenuProvider } from "../context/MessageMenuContext";
 import { useAuth } from "../context/AuthProvider";
+import { useFetchConversations } from "../features/useFetchConversations";
+import { useSettingsRef } from "../context/SettingsContext";
+import notificationSound from "../assets/universfield-new-notification-09-352705.mp3";
+
+function playNotificationSound() {
+  try {
+    const audio = new Audio(notificationSound);
+    audio.play();
+  } catch {
+    // Audio not supported
+  }
+}
+
+function showDesktopNotification(message) {
+  if (Notification.permission !== "granted") return;
+  try {
+    new Notification(message.senderUserName ?? "New message", {
+      body: message.messageContent ?? "You have a new message",
+      icon: "/favicon.ico",
+      silent: true,
+    });
+  } catch {
+    // Notification not supported
+  }
+}
 
 function sortConversations(convs) {
   return [...convs].sort((a, b) => {
@@ -24,17 +51,20 @@ function Home() {
   const [ActiveChat, SetActiveChat] = useState(null);
   const [roomId, setRoomId] = useState(null);
   const [mobileView, setMobileView] = useState("list"); // 'list' | 'chat'
+  const [activeView, setActiveView] = useState("chats"); // 'chats' | 'contacts'
   const activeChatIdRef = useRef(null);
   const defaultTitleRef = useRef(document.title || "Chat");
   const titleIntervalRef = useRef(null);
   const hiddenUnreadCountRef = useRef(0);
 
   const queryClient = useQueryClient();
+  const { conversations } = useFetchConversations();
   // const [onlineUsers, setOnlineUsers] = useState([]);
   const location = useLocation();
   const newConnection = useSignalRContext();
   const { state, dispatch } = useOnlineUsers();
   const { user } = useAuth();
+  const settingsRef = useSettingsRef();
 
   const urlPath = location.pathname;
   const isHome = urlPath === "/home";
@@ -136,9 +166,16 @@ function Home() {
         return sortConversations(updated);
       });
 
+      if (!isIncomingFromMe && settingsRef.current.messageSounds) {
+        playNotificationSound();
+      }
+
       if (document.hidden && !isActiveChat && !isIncomingFromMe) {
         hiddenUnreadCountRef.current += 1;
         startTitleNotification();
+        if (settingsRef.current.desktopNotifications) {
+          showDesktopNotification(incomingMessage);
+        }
       }
     };
 
@@ -200,6 +237,16 @@ function Home() {
     }
   }, [ActiveChat]);
 
+  // On mobile, show the right panel whenever we navigate away from /home
+  useEffect(() => {
+    if (!isHome) {
+      setMobileView("chat");
+      setActiveView("chats");
+    } else if (!ActiveChat) {
+      setMobileView("list");
+    }
+  }, [isHome, ActiveChat]);
+
   if (newConnection == null) return;
 
   function handleSetActiveChat(chat) {
@@ -207,16 +254,25 @@ function Home() {
     setMobileView("chat");
   }
 
+  const liveActiveChat =
+    ActiveChat && conversations
+      ? (conversations.find((c) => Number(c.id) === Number(ActiveChat.id)) ??
+        ActiveChat)
+      : ActiveChat;
+
   const chatPanel =
-    ActiveChat && roomId && isHome ? (
+    liveActiveChat && roomId && isHome ? (
       <MessageMenuProvider>
         <Chat
-          conversation={ActiveChat}
-          currentOpenConversationId={ActiveChat.id}
+          conversation={liveActiveChat}
+          currentOpenConversationId={liveActiveChat.id}
           isOnline={state.some(
-            (user) => user.displayName === ActiveChat.displayName,
+            (user) => user.displayName === liveActiveChat.displayName,
           )}
-          onBack={() => setMobileView("list")}
+          onBack={() => {
+            SetActiveChat(null);
+            setMobileView("list");
+          }}
         />
       </MessageMenuProvider>
     ) : (
@@ -227,28 +283,50 @@ function Home() {
     <div className="h-[100dvh] bg-gray-900 text-white overflow-hidden flex flex-col lg:flex-row">
       {/* LeftSideBar: renders at bottom on mobile (order-last), left on desktop (lg:order-first) */}
       <div className="order-last lg:order-first flex-shrink-0">
-        <LeftSideBar />
+        <LeftSideBar
+          activeView={activeView}
+          onViewChange={(view) => {
+            setActiveView(view);
+            if (view === "settings") setMobileView("list");
+          }}
+        />
       </div>
 
       {/* Main content area */}
       <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-hidden">
-        {/* Conversation list — hidden on mobile when chat is open */}
+        {/* Left panel — hidden on mobile when chat is open */}
         <div
           className={`${
             mobileView === "chat" ? "hidden lg:flex" : "flex"
-          } flex-col flex-1 lg:flex-none lg:w-[22rem] border-r-2 border-myGray`}
+          } flex-col flex-1 min-h-0 lg:flex-none lg:w-[22rem] border-r-2 border-myGray`}
         >
-          <MessagesList
-            setActiveChat={handleSetActiveChat}
-            onlineUsers={state}
-          />
+          {activeView === "contacts" ? (
+            <ContactsPanel
+              onOpenChat={(conv) => {
+                handleSetActiveChat(conv);
+                setActiveView("chats");
+              }}
+              activeChat={ActiveChat}
+              onCloseChat={() => {
+                SetActiveChat(null);
+                setMobileView("list");
+              }}
+            />
+          ) : activeView === "settings" ? (
+            <SettingsPage />
+          ) : (
+            <MessagesList
+              setActiveChat={handleSetActiveChat}
+              onlineUsers={state}
+            />
+          )}
         </div>
 
         {/* Chat / outlet — hidden on mobile when list is shown */}
         <div
           className={`${
             mobileView === "list" ? "hidden lg:flex" : "flex"
-          } flex-col flex-1`}
+          } flex-col flex-1 min-h-0 overflow-hidden`}
         >
           {chatPanel}
         </div>

@@ -75,7 +75,7 @@ function UserDetails() {
   return (
     <form
       onSubmit={handleSubmit(submitStep2)}
-      className="flex flex-col gap-5 w-full sm:w-1/2 md:w-1/4"
+      className="flex flex-col gap-5 w-full"
     >
       <div className="flex flex-col items-center gap-5">
         <img
