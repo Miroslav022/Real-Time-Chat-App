@@ -153,6 +153,7 @@ function UserDetails() {
         </svg>
         <input
           type="password"
+          placeholder="Password"
           className="grow"
           {...register("password", {
             required: "Password is required",

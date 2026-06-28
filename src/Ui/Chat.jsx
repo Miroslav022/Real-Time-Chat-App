@@ -30,6 +30,7 @@ import { addContact } from "../Services/apiContacts";
 import { IoPersonAddSharp } from "react-icons/io5";
 import { useSettings } from "../context/SettingsContext";
 import { useOnlineUsers } from "../context/OnlineUsersContext";
+import toast from "react-hot-toast";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
@@ -136,9 +137,20 @@ function Chat({ conversation, isOnline, currentOpenConversationId, onBack }) {
         return;
       }
 
-      updateMessagesState((currentMessages) =>
-        upsertMessage(currentMessages, incomingMessage),
-      );
+      updateMessagesState((currentMessages) => {
+        let enriched = incomingMessage;
+        if (
+          incomingMessage.repliedToMessageId &&
+          !incomingMessage.repliedToMessage
+        ) {
+          const replied = currentMessages.find(
+            (m) => Number(m.id) === Number(incomingMessage.repliedToMessageId),
+          );
+          if (replied)
+            enriched = { ...incomingMessage, repliedToMessage: replied };
+        }
+        return upsertMessage(currentMessages, enriched);
+      });
       // Conversation list updates (lastMessage, unreadCount) are handled
       // optimistically in Home.jsx — no invalidation needed here.
     }
@@ -339,7 +351,10 @@ function Chat({ conversation, isOnline, currentOpenConversationId, onBack }) {
 
   const sendMessage = useCallback(async () => {
     if (!text && selectedImages.length === 0) return;
-    if (!connection || connection.state !== "Connected") return;
+    if (!connection || connection.state !== "Connected") {
+      toast.error("Connection lost. Reconnecting, please try again shortly.");
+      return;
+    }
 
     try {
       const participantIds = [

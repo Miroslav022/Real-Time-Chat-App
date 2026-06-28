@@ -35,7 +35,7 @@ function Message({
   const media = message.media ?? message.Media;
   const hasImages = Array.isArray(media) && media.length > 0;
   const messageContent = message.messageContent ?? message.MessageContent;
-
+  console.log("Message content:", message);
   const isSentByCurrentUser =
     Number(currentUserId) === Number(message.senderId) ||
     currentUser === message.senderUserName;
@@ -108,10 +108,10 @@ function Message({
                 {message.senderUserName}
               </div>
             )}
-            {message.repliedToMessageId && (
+            {message.repliedToMessageId && message.repliedToMessage && (
               <div className="mb-2 px-2 py-1 text-xs bg-white/30 border-l-4 border-blue-300 rounded-sm text-gray-700">
                 <span className="block font-medium text-xs text-gray-600">
-                  {message.repliedToMessage.senderUserName}
+                  {message.repliedToMessage?.senderUserName}
                 </span>
                 {Array.isArray(message.repliedToMessage?.media) &&
                   message.repliedToMessage.media.length > 0 &&

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import Chat from "../Ui/Chat";
+import Spinner from "../Ui/Spinner";
 import LeftSideBar from "../Ui/LeftSideBar";
 import MessagesList from "../Ui/MessagesList";
 import ContactsPanel from "../Ui/ContactsPanel";
@@ -115,8 +116,6 @@ function Home() {
   useEffect(() => {
     if (!newConnection) return;
 
-    if (newConnection.state === "Disconnected") return;
-
     const handleReceivePrivateMessage = (messageOrSender, maybeMessage) => {
       const incomingMessage = messageOrSender?.id
         ? messageOrSender
@@ -208,19 +207,30 @@ function Home() {
       queryClient.invalidateQueries({ queryKey: ["Conversations"] });
     });
 
+    newConnection.onreconnected(() => {
+      setRoomId(null);
+      if (activeChatIdRef.current) {
+        newConnection
+          .invoke("JoinPrivateChat", activeChatIdRef.current)
+          .catch(console.error);
+      }
+    });
+
     return () => {
       newConnection.off("ReceiveMessage");
       newConnection.off("ReceivePrivateMessage", handleReceivePrivateMessage);
       newConnection.off("JoinedRoom");
       newConnection.off("UserStatusChanged");
       newConnection.off("newOnlineUser");
+      newConnection.off("UserWentOffline");
       newConnection.off("GroupChatCreated");
+      newConnection.onreconnected(null);
     };
   }, [newConnection, dispatch, queryClient, user?.sub]);
 
   // 2️⃣ Effect just for joining chats (depends on ActiveChat)
   useEffect(() => {
-    if (!newConnection || newConnection.state === "Disconnected") return;
+    if (!newConnection || newConnection.state !== "Connected") return;
 
     if (ActiveChat) {
       const conversationId = ActiveChat.id;
@@ -275,6 +285,10 @@ function Home() {
           }}
         />
       </MessageMenuProvider>
+    ) : liveActiveChat && !roomId && isHome ? (
+      <div className="flex flex-1 items-center justify-center">
+        <Spinner />
+      </div>
     ) : (
       <Outlet />
     );
