@@ -3,7 +3,7 @@ import ProfileImage from "./ProfileImage";
 // import { useQuery } from "@tanstack/react-query";
 import PropTypes from "prop-types";
 import { IoPersonAddSharp } from "react-icons/io5";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import AddContact from "./AddContact";
 import ChatCard from "./ChatCard";
 import { useFetchConversations } from "../features/useFetchConversations";
@@ -13,23 +13,59 @@ import QuickMenu from "./QuickMenu";
 import OnlineUser from "./OnlineUser";
 import CreateGroupModal from "./CreateGroupModal";
 import { useAuth } from "../context/AuthProvider";
+import { useContacts } from "../features/Contacts/useContacts";
+import { useQueryClient } from "@tanstack/react-query";
+import { useSearchConversations } from "../features/useSearchConversations";
 
 function MessagesList({ setActiveChat, onlineUsers }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSettingDropDownOpen, setIsSettingsDropDownOpen] = useState(false);
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const navigation = useNavigate();
+  const queryClient = useQueryClient();
   const { user } = useAuth();
   // const { data } = useQuery({
   //   queryKey: ["currentUser"],
   // });
+  const { contacts } = useContacts();
   const { conversations } = useFetchConversations(user?.sub);
+  const { conversations: searchedConversations, isSearchingConversations } =
+    useSearchConversations(debouncedSearchTerm);
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm]);
+
+  const isSearchMode = searchTerm.trim().length > 0;
+  const displayedConversations = isSearchMode
+    ? searchedConversations
+    : conversations;
+
+  const totalUnread =
+    conversations?.reduce((sum, c) => sum + (c.unreadCount ?? 0), 0) ?? 0;
 
   console.log("OnlineUsers>>>", onlineUsers);
 
-  function SelectChat(user) {
-    console.log("user>>>", user);
-    setActiveChat(user);
+  function SelectChat(chat) {
+    console.log("user>>>", chat);
+
+    queryClient.setQueryData(["Conversations"], (oldConversations) => {
+      if (!Array.isArray(oldConversations)) return oldConversations;
+
+      return oldConversations.map((conversation) =>
+        Number(conversation.id) === Number(chat.id)
+          ? { ...conversation, isRead: true, unreadCount: 0 }
+          : conversation,
+      );
+    });
+
+    setActiveChat({ ...chat, isRead: true, unreadCount: 0 });
     navigation("/home");
   }
 
@@ -47,7 +83,7 @@ function MessagesList({ setActiveChat, onlineUsers }) {
   }
 
   return (
-    <div className="bg-gray-850 border-r-2 border-myGray flex flex-col h-screen">
+    <div className="bg-gray-850 flex flex-col h-full overflow-hidden">
       <div className="flex gap-5 p-4 items-center border-b-2 border-myGray">
         <ProfileImage fileName={user?.picture} />
         <div>
@@ -75,6 +111,8 @@ function MessagesList({ setActiveChat, onlineUsers }) {
             type="text"
             className="grow"
             placeholder="Search or start new chat..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -102,29 +140,42 @@ function MessagesList({ setActiveChat, onlineUsers }) {
                   SelectChat={SelectChat}
                   key={user.userId}
                 />
-              )
+              ),
           )}
         </div>
       </div>
 
-      <div className="flex flex-col gap-5 flex-grow overflow-y-auto">
+      <div className="flex flex-col gap-5 flex-grow overflow-y-auto min-h-0">
         <div className="flex justify-between h-12 items-center gap-2 pl-4 pr-4 pt-4">
           <h2 className="font-medium flex items-center gap-2 text-xl">
             Messages
-            <span className="bg-myLightBlue text-sm rounded-xl w-6 text-center block">
-              20
-            </span>
+            {totalUnread > 0 && (
+              <span className="bg-myLightBlue text-xs font-bold rounded-xl min-w-[1.5rem] h-5 text-center flex items-center justify-center px-1">
+                {totalUnread > 99 ? "99+" : totalUnread}
+              </span>
+            )}
           </h2>
           <div
-            className="bg-inpurBorder w-7 h-7 flex items-center justify-center rounded-full cursor-pointer"
-            onClick={() => setShowCreateGroupModal(true)}
+            className={`bg-inpurBorder w-7 h-7 flex items-center justify-center rounded-full ${
+              contacts?.length > 0
+                ? "cursor-pointer"
+                : "cursor-not-allowed opacity-40"
+            }`}
+            onClick={() =>
+              contacts?.length > 0 && setShowCreateGroupModal(true)
+            }
+            title={
+              contacts?.length === 0
+                ? "Add contacts first to create a group"
+                : "Create group"
+            }
           >
             <p>+</p>
           </div>
         </div>
         <div className="flex flex-col">
-          {conversations?.length > 0 ? (
-            conversations.map((chat) => (
+          {displayedConversations?.length > 0 ? (
+            displayedConversations.map((chat) => (
               <ChatCard
                 SelectChat={SelectChat}
                 key={chat.id}
@@ -132,6 +183,10 @@ function MessagesList({ setActiveChat, onlineUsers }) {
                 isOnline={handleIsOnline(chat)}
               />
             ))
+          ) : isSearchMode && !isSearchingConversations ? (
+            <p className="text-center pt-4">No conversations found</p>
+          ) : isSearchMode && isSearchingConversations ? (
+            <p className="text-center pt-4">Searching...</p>
           ) : (
             <p className="text-center pt-4">Start a conversation</p>
           )}

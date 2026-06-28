@@ -10,6 +10,7 @@ export function useUnblockUser() {
     onSuccess: () => {
       toast.success("User has been successfully unblocked");
       queryClient.invalidateQueries({ queryKey: ["Conversations"] });
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
     },
     onError: (e) => {
       toast.error("Something went wrong");

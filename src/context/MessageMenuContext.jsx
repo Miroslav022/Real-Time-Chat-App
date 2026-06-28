@@ -6,6 +6,7 @@ const initialState = {
   isOpen: false,
   messageId: null,
   messageContent: "",
+  replyMedia: null,
   position: {
     top: 0,
     left: 0,
@@ -21,6 +22,7 @@ function reducer(state, action) {
         isOpen: true,
         messageId: action.payload.messageId,
         messageContent: action.payload.messageContent,
+        replyMedia: action.payload.media ?? null,
         position: action.payload.position,
       };
     case "REPLY_MESSAGE":
@@ -51,7 +53,7 @@ export function useMessageMenu() {
   const context = useContext(MessageMenuContext);
   if (!context)
     throw new Error(
-      "MessageMenuContext was used outside of the OnlineUsersProvider"
+      "MessageMenuContext was used outside of the OnlineUsersProvider",
     );
   return context;
 }

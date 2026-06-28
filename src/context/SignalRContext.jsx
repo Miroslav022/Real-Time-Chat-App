@@ -40,12 +40,6 @@ function SignalRProvider({ children }) {
         })
         .catch((err) => console.log("SignalR Connection", err));
     }
-
-    // return () => {
-    //   memoizedConnection.stop();
-    //   console.log("SignalR Disconnected");
-    //   isConnected.current = false;
-    // };
   }, [memoizedConnection]);
 
   return (

@@ -12,21 +12,27 @@ import { jwtDecode } from "jwt-decode";
 const AuthContext = createContext(undefined);
 
 function AuthProvider({ children }) {
-  const [token, setToken] = useState();
-  const [user, setUser] = useState();
+  const [token, setToken] = useState(null);
+  const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchMe() {
+    async function bootstrapAuth() {
       try {
-        await axiosInstance.get("/Auth/current_user");
-      } catch (error) {
-        console.error(error);
+        const response = await axiosInstance.post("/Auth/refresh_token");
+        if (response?.data) {
+          setToken(response.data);
+          setUser(jwtDecode(response.data));
+        }
+      } catch {
+        setToken(null);
+        setUser(null);
       } finally {
-        setIsLoading(false); // ✅ mark loading finished on first attempt
+        setIsLoading(false);
       }
     }
-    fetchMe();
+
+    bootstrapAuth();
   }, []);
 
   function loginUser(token) {
@@ -40,12 +46,12 @@ function AuthProvider({ children }) {
     setToken(null);
     setUser(null);
   }
+
   useLayoutEffect(() => {
     const authInterceptor = axiosInstance.interceptors.request.use((config) => {
-      config.headers.Authorization =
-        !config._retry && token
-          ? `Bearer ${token}`
-          : config.headers.Authorization;
+      config.headers.Authorization = token
+        ? `Bearer ${token}`
+        : config.headers.Authorization;
       return config;
     });
 
@@ -59,14 +65,21 @@ function AuthProvider({ children }) {
       (response) => response,
       async (error) => {
         const orginalRequest = error.config;
-        console.log("error obj:", error);
+
+        if (!error?.response || !orginalRequest) {
+          return Promise.reject(error);
+        }
+
         if (
           error.response.status === 401 &&
+          !orginalRequest._retry &&
           orginalRequest.url !== "/Auth/refresh_token"
         ) {
           orginalRequest._retry = true;
+
           try {
             const response = await axiosInstance.post("/Auth/refresh_token");
+            if (!response?.data) return Promise.reject(error);
 
             setToken(response.data);
             const decryptedToken = jwtDecode(response.data);
@@ -76,15 +89,13 @@ function AuthProvider({ children }) {
 
             return axiosInstance(orginalRequest);
           } catch {
-            setToken(null);
-            setUser(null);
-          } finally {
-            setIsLoading(false);
+            logoutUser();
+            return Promise.reject(error);
           }
-
-          return Promise.reject(error);
         }
-      }
+
+        return Promise.reject(error);
+      },
     );
     return () => {
       axiosInstance.interceptors.response.eject(refreshInterceptor);
@@ -100,6 +111,7 @@ function AuthProvider({ children }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   const authContext = useContext(AuthContext);
   if (!authContext)
@@ -109,7 +121,8 @@ export function useAuth() {
 
 AuthProvider.propTypes = {
   children: propTypes.oneOfType([
-    propTypes.node || propTypes.arrayOf(propTypes.node),
+    propTypes.node,
+    propTypes.arrayOf(propTypes.node),
   ]),
 };
 

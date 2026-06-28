@@ -8,7 +8,18 @@ export async function createConversation(data) {
 
 export async function getAllConversations() {
   const chats = await axiosInstance.get(
-    `https://localhost:7257/api/Conversation/conversations`
+    `https://localhost:7257/api/Conversation/conversations`,
+  );
+
+  return chats;
+}
+
+export async function searchConversations(searchTerm) {
+  const chats = await axiosInstance.get(
+    `https://localhost:7257/api/conversation/conversations/search`,
+    {
+      params: { searchTerm },
+    },
   );
 
   return chats;
@@ -16,14 +27,26 @@ export async function getAllConversations() {
 
 export async function getMessages(conversationId) {
   const messages = await axiosInstance.get(
-    `https://localhost:7257/api/message?conversationId=${conversationId}`
+    `https://localhost:7257/api/message?conversationId=${conversationId}`,
   );
 
   return messages.data.value;
 }
 
-export async function createGroupConversation(data) {
-  const response = await axiosInstance.post("/Conversation/groupchat", data);
+export async function createGroupConversation(formData) {
+  const response = await axiosInstance.post(
+    "/Conversation/groupchat",
+    formData,
+  );
+
+  return response;
+}
+
+export async function updateGroupImage(conversationId, formData) {
+  const response = await axiosInstance.put(
+    `/Conversation/groupchat/${conversationId}/image`,
+    formData,
+  );
 
   return response;
 }

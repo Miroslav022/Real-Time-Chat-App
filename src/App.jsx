@@ -9,6 +9,7 @@ import ProtectedRoute from "./Ui/ProtectedRoute";
 import { Toaster } from "react-hot-toast";
 import EditAccount from "./Ui/EditAccount";
 import WelcomeToHome from "./Ui/WelcomeToHome";
+import { SettingsProvider } from "./context/SettingsContext";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -22,23 +23,25 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ReactQueryDevtools initialIsOpen={false} />
-      <BrowserRouter>
-        <Routes>
-          <Route path="auth" element={<Auth />}>
-            <Route index element={<Navigate replace to="login" />} />
-            <Route path="login" element={<Login />} />
-            <Route path="registration" element={<UserDetails />} />
-          </Route>
-          <Route element={<ProtectedRoute />}>
-            <Route path="home" element={<Home />}>
-              <Route index element={<WelcomeToHome />} />
-              <Route path="edituser" element={<EditAccount />} />
+      <SettingsProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="auth" element={<Auth />}>
+              <Route index element={<Navigate replace to="login" />} />
+              <Route path="login" element={<Login />} />
+              <Route path="registration" element={<UserDetails />} />
             </Route>
-          </Route>
+            <Route element={<ProtectedRoute />}>
+              <Route path="home" element={<Home />}>
+                <Route index element={<WelcomeToHome />} />
+                <Route path="edituser" element={<EditAccount />} />
+              </Route>
+            </Route>
 
-          <Route path="*" element={<Navigate to="/auth/login" />} />
-        </Routes>
-      </BrowserRouter>
+            <Route path="*" element={<Navigate to="/auth/login" />} />
+          </Routes>
+        </BrowserRouter>
+      </SettingsProvider>
       <Toaster
         position="top-right"
         reverseOrder={false}
